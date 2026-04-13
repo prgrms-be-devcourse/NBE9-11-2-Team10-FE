@@ -1,6 +1,6 @@
 // lib/api/auth.ts
 import { api } from './request';
-import { RsData, RegisterData, LoginData, DuplicateCheckData } from './types';
+import { RsData, RegisterData, LoginData, DuplicateCheckData, Role } from './types';
 
 export interface RegisterRequest {
   email: string;

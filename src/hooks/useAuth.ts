@@ -21,6 +21,7 @@ export const useAuth = () => {
         return { success: true };
       } 
       
+      // 추후 2FA 구현 시 사용
       if (rsData.data?.flowState === 'TFA_REQUIRED') {
         router.push(`/auth/2fa?sessionId=${rsData.data.tfaSessionId}`);
         return { success: false, requires2fa: true };
