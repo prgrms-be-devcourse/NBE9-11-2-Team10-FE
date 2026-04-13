@@ -31,10 +31,8 @@ export const registerSchema = z.object({
         .regex(/^[a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣_]+$/, '닉네임은 영문, 숫자, 한글, _ 만 사용할 수 있습니다.')
         .trim(),
 
-    address: z
-        .string()
-        .min(1, '주소를 입력해주세요.')
-        .max(255, '주소는 255자 이내여야 합니다.'),
+    baseAddress: z.string().min(1, '주소를 검색해주세요.'),      // 카카오 API 로 채워지는 주소
+    detailAddress: z.string().min(1, '상세주소를 입력해주세요.'),
 
     role: z.enum(['BUYER', 'SELLER']).default('BUYER').optional(),
 })
