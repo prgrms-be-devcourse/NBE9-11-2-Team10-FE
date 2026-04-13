@@ -10,12 +10,12 @@ export const useAuth = () => {
   const { setUser, setStatus, logout: clearLocal } = useAuthStore();
 
   // ✅ 로그인: 응답에 토큰 없음, 사용자 정보만 저장
-  const login = useCallback(async (identifier: string, password: string, role: 'BUYER' | 'SELLER') => {
+  const login = useCallback(async (identifier: string, password: string) => {
     try {
-      const rsData = await authApi.login({ identifier, password, targetRole: role });
+      const rsData = await authApi.login({ identifier, password});
       
       if (rsData.data?.flowState === 'AUTH_SUCCESS') {
-        setUser(rsData.data.user); // 쿠키는 브라우저가 자동 관리
+            setUser(rsData.data.user); // 쿠키는 브라우저가 자동 관리
         setStatus('ACTIVE');
         router.push('/dashboard');
         return { success: true };

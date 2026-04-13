@@ -14,7 +14,6 @@ export interface RegisterRequest {
 export interface LoginRequest {
   identifier: string;
   password: string;
-  targetRole: 'BUYER' | 'SELLER' | 'ADMIN';
 }
 
 export const authApi = {
