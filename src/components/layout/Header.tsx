@@ -9,9 +9,25 @@ import { useAuthStore } from '@/stores/useAuthStore'; // 👈 스토어 import
 export default function Header() {
   const router = useRouter();
   // 👇 스토어에서 상태와 액션 가져오기
-  const { user, status, setUser, logout: clearStore } = useAuthStore();
+  const { user, status, logout: clearStore } = useAuthStore();
 
   const isLoggedIn = status === 'authenticated';
+
+  const handleLogout = async () => {
+    try {
+      // 1. 스토어에서 로그아웃 액션 실행 (서버 요청 + 로컬 상태 초기화)
+      await clearStore();
+      
+      // 2. 로그인 페이지로 이동
+      router.push('/login');
+      
+      // 3. 서버 컴포넌트 데이터 새로고침 (Next.js App Router)
+      router.refresh();
+    } catch (error) {
+      console.error('Logout failed:', error);
+      alert('로그아웃 처리 중 오류가 발생했습니다.');
+    }
+  };
 
   // 👇 컴포넌트 마운트 시 인증 상태 확인 (새로고침 대비)
   useEffect(() => {
@@ -19,9 +35,6 @@ export default function Header() {
       useAuthStore.getState().checkAuth();
     }
   }, [status]);
-
-    const handleLogout = async () => {
-      };
 
     return (
         <header className="w-full bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">

@@ -1,3 +1,4 @@
+import { logout } from '@/lib/api/auth';
 import { create } from 'zustand';
 
 export type UserRole = 'BUYER' | 'SELLER' | 'ADMIN';
@@ -55,9 +56,20 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  logout: () => {
-    // zustand 상태 초기화 + 로컬 스토리지 삭제
-    localStorage.removeItem('cached_user');
-    set({ user: null, status: 'unauthenticated' });
+  logout: async () => {
+    try {
+      // 1. 서버에 로그아웃 요청 (쿠키 삭제 처리)
+      await logout();
+    } catch (e) {
+      // 서버 에러가 발생해도 로컬에서는 로그아웃 처리할지 여부는 정책 결정
+      // 여기서는 사용자 경험을 위해 로컬 상태는 무조건 초기화합니다.
+      console.error('Logout API call failed, but clearing local state', e);
+    } finally {
+      // 2. 로컬 스토리지 캐시 삭제
+      localStorage.removeItem('cached_user');
+      
+      // 3. Zustand 상태 초기화
+      set({ user: null, status: 'unauthenticated' });
+    }
   },
 }));

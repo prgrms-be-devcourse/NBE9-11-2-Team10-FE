@@ -1,4 +1,4 @@
-// scripts/mock-api-server.ts (최종 간소화 버전)
+// scripts/mock-api-server.ts
 import express from 'express';
 import cors from 'cors';
 
@@ -183,6 +183,34 @@ app.post('/api/v1/auth/login', (req, res) => {
       nickname: user.nickname,
       role: user.role,
     },
+  });
+});
+
+app.post('/api/v1/auth/logout', (req, res) => {
+
+  // 🍪 쿠키 무효화: Max-Age=0 으로 설정하여 브라우저에서 즉시 삭제
+  const isProd = process.env.NODE_ENV === 'production';
+  
+  res.cookie('accessToken', '', {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,  // 👈 즉시 만료
+  });
+
+  res.cookie('refreshToken', '', {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'strict',
+    path: '/api/v1/auth/refresh',
+    maxAge: 0,  // 👈 즉시 만료
+  });
+
+  // ✅ 성공 응답
+  return res.status(200).json({
+    message: "로그아웃이 완료되었습니다.",
+    invalidatedAt: new Date().toISOString(),
   });
 });
 
