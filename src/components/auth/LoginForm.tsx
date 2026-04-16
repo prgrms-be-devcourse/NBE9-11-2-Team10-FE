@@ -5,12 +5,16 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { loginSchema } from '@/schemas/auth.schema';
 import { browserLoginService } from '@/lib/services/browserAuthService';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { UserInfo } from '@/types/auth';
 
 export default function LoginForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const { setUser } = useAuthStore();
 
   const handleSubmit = async (formData: FormData) => {
     setError(undefined);
@@ -40,6 +44,13 @@ export default function LoginForm() {
         }
         return;
       }
+
+      if (!result.data) {
+        setError('로그인 응답에 사용자 정보가 없습니다.');
+        return;
+      }
+
+      setUser(result.data);
 
       router.push('/');
       router.refresh(); // 서버 컴포넌트 데이터 새로고침

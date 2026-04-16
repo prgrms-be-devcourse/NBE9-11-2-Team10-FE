@@ -75,12 +75,7 @@ export interface ApiErrorResponse {
 
 export interface LoginResponse {
   success: boolean;
-  data?: {
-    id: number;
-    email: string;
-    nickname: string;
-    role: 'BUYER' | 'SELLER';
-  };
+  data?: UserInfo;
   error?: {
     code: string;
     message: string;
@@ -92,5 +87,9 @@ export type LoginActionState = {
   success: boolean;
   error?: string;
   fieldErrors?: Record<string, string>;
-  data?: { id: number; email: string; nickname: string; role: string };
+  data?: UserInfo
+};
+
+export type UserInfo = {
+  id: number; email: string; nickname: string; role: 'BUYER' | 'SELLER';
 };

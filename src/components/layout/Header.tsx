@@ -2,35 +2,26 @@
 'use client';
 
 import Link from 'next/link';
-// import { useAuthStore } from '@/stores/useAuthStore';
 import { useRouter } from 'next/navigation';
-// import { authApi } from '@/lib/api/auth';
+import { useEffect } from 'react';
+import { useAuthStore } from '@/stores/useAuthStore'; // 👈 스토어 import
 
 export default function Header() {
-    // const { user, status, logout: clearLocal } = useAuthStore();
-    const { user, status, logout: clearLocal } = {
-        user: undefined,
-        status: "active",
-        logout: () => {}
-    };
-    const router = useRouter();
+  const router = useRouter();
+  // 👇 스토어에서 상태와 액션 가져오기
+  const { user, status, setUser, logout: clearStore } = useAuthStore();
 
-    // 로그인 상태 확인
-    const isLoggedIn = !!user;
+  const isLoggedIn = status === 'authenticated';
+
+  // 👇 컴포넌트 마운트 시 인증 상태 확인 (새로고침 대비)
+  useEffect(() => {
+    if (status === 'idle') {
+      useAuthStore.getState().checkAuth();
+    }
+  }, [status]);
 
     const handleLogout = async () => {
-        // try {
-        //     // 서버 쿠키 삭제 요청
-        //     await authApi.logout();
-        // } catch (e) {
-        //     console.error('Logout failed', e);
-        // } finally {
-        //     // 로컬 상태 초기화
-        //     clearLocal();
-        //     router.push('/login');
-        //     router.refresh(); // 클라이언트 상태 갱신
-        // }
-    };
+      };
 
     return (
         <header className="w-full bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
@@ -47,7 +38,7 @@ export default function Header() {
 
                         {/* 로그인 시 사용자 이름 표시 */}
                         {isLoggedIn ? (
-                            <span className="text-lg font-semibold text-gray-800">{/*user.email*/} 님</span>
+                            <span className="text-lg font-semibold text-gray-800">{user!.nickname} 님</span>
                         ) : (
                             <span className="text-lg font-semibold text-gray-400">Guest</span>
                         )}
