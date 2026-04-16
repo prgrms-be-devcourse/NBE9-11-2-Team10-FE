@@ -8,24 +8,42 @@ test.describe('로그인 폼 (LoginForm)', () => {
   });
 
   // ✅ 시나리오 1: 성공 케이스
-  test('유효한 정보로 로그인이 성공해야 한다', async ({ page }) => {
-    // Mock Server: 'success@example.com' + 'TestPass123!' → 200 OK
+  test('로그인 성공 시 쿠키 속성이 명세서와 일치해야 한다', async ({ page, context }) => {
+    // 로그인 수행
     await page.fill('input[name="email"]', 'success@example.com');
     await page.fill('input[name="password"]', 'TestPass123!');
-    
     await page.click('button[type="submit"]');
-
-    // Server Action 성공 시 /dashboard 로 리다이렉트
-    await expect(page).toHaveURL('/', { timeout: 10000 });
-    
-    // (선택) 대시보드 페이지에 사용자 정보가 렌더링되었는지 확인
-    // await expect(page.locator('text=길동이')).toBeVisible();
+    await expect(page).toHaveURL('/');
+  
+    const cookies = await context.cookies();
+    const accessToken = cookies.find(c => c.name === 'accessToken')!;
+    const refreshToken = cookies.find(c => c.name === 'refreshToken')!;
+  
+    // ✅ accessToken 속성 검증
+    expect(accessToken).toMatchObject({
+      name: 'accessToken',
+      path: '/',
+      httpOnly: true,
+      sameSite: 'Lax',  // Playwright 는 대문자 반환
+      // secure: process.env.NODE_ENV === 'production', // 로컬/운영 환경에 따라 다름
+    });
+    // maxAge 는 만료시간으로 변환되어 반환되므로 별도 검증
+    expect(accessToken.expires).toBeGreaterThan(Date.now() / 1000); // UNIX timestamp
+  
+    // ✅ refreshToken 속성 검증
+    expect(refreshToken).toMatchObject({
+      name: 'refreshToken',
+      path: '/api/v1/auth/refresh',  // 🔑 경로 제한 확인
+      httpOnly: true,
+      sameSite: 'Strict',
+    });
+    expect(refreshToken.expires).toBeGreaterThan(Date.now() / 1000);
   });
 
   // ❌ 시나리오 2: 비밀번호 형식 오류 (클라이언트/서버 공통 검증)
   test('비밀번호 형식이 올바르지 않으면 에러가 표시되어야 한다', async ({ page }) => {
     await page.fill('input[name="email"]', 'test@example.com');
-    await page.fill('input[name="password"]', 'short'); // 8자 미만
+    await page.fill('input[name="password"]', 'shor12@'); // 8자 미만
     
     await page.click('button[type="submit"]');
 

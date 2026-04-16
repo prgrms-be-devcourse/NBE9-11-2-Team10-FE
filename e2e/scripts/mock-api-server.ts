@@ -117,6 +117,8 @@ app.get('/api/v1/auth/check-duplicate', (req, res) => {
 app.post('/api/v1/auth/login', (req, res) => {
   const { email, password } = req.body;
 
+  res.setHeader('Content-Type', 'application/json');
+
   // 1. 필수 필드 검증
   if (!email || !password) {
     return res.status(400).json({
@@ -149,6 +151,30 @@ app.post('/api/v1/auth/login', (req, res) => {
   }
 
   // 4. 로그인 성공
+
+  const mockAccessToken = `mock_access_${user.id}_${Date.now()}`;
+  const mockRefreshToken = `mock_refresh_${user.id}_${Date.now()}`;
+
+  const isProd = process.env.NODE_ENV === 'production';
+  
+  // accessToken 쿠키
+  res.cookie('accessToken', mockAccessToken, {
+    httpOnly: true,
+    secure: isProd,           // 로컬에서는 false, 운영에서는 true
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 1000,   // 1시간 (ms)
+  });
+
+  // refreshToken 쿠키
+  res.cookie('refreshToken', mockRefreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'strict',
+    path: '/api/v1/auth/refresh',  // refresh 엔드포인트 전용 경로
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7일 (ms)
+  });
+
   return res.status(200).json({
     success: true,
     data: {
