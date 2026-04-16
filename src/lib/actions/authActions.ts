@@ -1,12 +1,15 @@
 // @/app/actions/authActions.ts
 'use server';
 
-import { registerService } from '@/lib/services/authService';
+import { loginService, registerService } from '@/lib/services/authService';
 import { RegisterRequest, registerSchema } from '@/schemas/auth.schema';
 import {
+  LoginActionState,
   RegisterActionState,
   initialRegisterState
 } from '@/types/auth';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 /**
  * [Action 1] 폼 입력값 업데이트 전용 액션
@@ -119,3 +122,34 @@ const FORM_FIELDS = [
   'email', 'password', 'name', 'nickname', 'phoneNumber',
   'roadAddress', 'detailAddress', 'role'
 ];
+
+export async function loginAction(
+  prevState: LoginActionState,
+  formData: FormData
+): Promise<LoginActionState> {
+  // 1. FormData 에서 값 추출
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+
+  // 2. Service 호출
+  const result = await loginService({ email, password });
+
+  // 3. 실패 시 에러 반환
+  if (!result.success) {
+    return {
+      success: false,
+      error: result.error?.message,
+      fieldErrors: result.error?.field ? { [result.error.field]: result.error.message } : undefined,
+    };
+  }
+
+  const cookieStore = await cookies();
+  cookieStore.set('auth_token', 'dummy_token_for_demo', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7, // 1 week
+  });
+
+  redirect('/');
+}

@@ -5,6 +5,16 @@ import cors from 'cors';
 const app = express();
 const PORT = 4000;
 
+const mockUsers = [
+  {
+    id: 1,
+    email: 'success@example.com',
+    password: 'TestPass123!', // 실제 운영환경에서는 절대 평문 저장 금지
+    nickname: '길동이',
+    role: 'BUYER' as const,
+  },
+];
+
 // ✅ CORS 설정 (테스트 환경용)
 app.use(cors({
   origin: [
@@ -100,6 +110,53 @@ app.get('/api/v1/auth/check-duplicate', (req, res) => {
   res.json({ 
     success: true, 
     data: { type, value, available: true } 
+  });
+});
+
+// 🔐 로그인 엔드포인트
+app.post('/api/v1/auth/login', (req, res) => {
+  const { email, password } = req.body;
+
+  // 1. 필수 필드 검증
+  if (!email || !password) {
+    return res.status(400).json({
+      detail: "필수 입력값이 누락되었습니다.",
+      instance: "/api/v1/auth/login",
+      status: 400,
+      errorCode: "VALIDATION_FAILED",
+      timestamp: new Date().toISOString(),
+      validationErrors: [
+        !email && { field: 'email', message: '이메일을 입력해 주세요.' },
+        !password && { field: 'password', message: '비밀번호를 입력해 주세요.' },
+      ].filter(Boolean),
+    });
+  }
+
+  // 2. 사용자 조회
+  const user = mockUsers.find(u => u.email === email);
+
+  // 3. 사용자 없음 또는 비밀번호 불일치 → 404 (명세서 준수: 구분하지 않음)
+  if (!user || user.password !== password) {
+    return res.status(404).json({
+      detail: "아이디 또는 비밀번호가 일치하지 않습니다.",
+      instance: "/api/v1/auth/login",
+      status: 404,
+      title: "Not Found",
+      type: "https://api.example.com/errors/USER_004",
+      errorCode: "USER_004",
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // 4. 로그인 성공
+  return res.status(200).json({
+    success: true,
+    data: {
+      id: user.id,
+      email: user.email,
+      nickname: user.nickname,
+      role: user.role,
+    },
   });
 });
 

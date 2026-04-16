@@ -72,3 +72,25 @@ export interface ApiErrorResponse {
   status: number;
   timestamp: string;
 }
+
+export interface LoginResponse {
+  success: boolean;
+  data?: {
+    id: number;
+    email: string;
+    nickname: string;
+    role: 'BUYER' | 'SELLER';
+  };
+  error?: {
+    code: string;
+    message: string;
+    field?: string;
+  };
+}
+
+export type LoginActionState = {
+  success: boolean;
+  error?: string;
+  fieldErrors?: Record<string, string>;
+  data?: { id: number; email: string; nickname: string; role: string };
+};

@@ -1,5 +1,5 @@
 import test, { expect } from "@playwright/test";
-import { expectErrorMessageVisible } from "../utils/helper";
+import { expectErrorMessageVisible } from "../../utils/helper";
 
 
 test.describe('회원가입 폼 (RegisterForm)', () => {

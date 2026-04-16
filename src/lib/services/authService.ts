@@ -1,7 +1,7 @@
 'use server';
 
-import { RegisterRequest } from '@/schemas/auth.schema';
-import { RegisterResponse } from '@/types/auth';
+import { LoginFormValues, loginSchema, RegisterRequest } from '@/schemas/auth.schema';
+import { LoginResponse, RegisterResponse } from '@/types/auth';
 
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8080';
 
@@ -52,6 +52,51 @@ export async function registerService(data: RegisterRequest): Promise<RegisterRe
     return {
       success: false,
       detail: '네트워크 오류가 발생했습니다. 다시 시도해 주세요.',
+    };
+  }
+}
+
+export async function loginService(formData: LoginFormValues): Promise<LoginResponse> {
+  const validation = loginSchema.safeParse(formData);
+  if (!validation.success) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_FAILED',
+        message: validation.error.issues[0].message,
+        field: validation.error.issues[0].path[0] as string,
+      },
+    };
+  }
+
+  try {
+    // 2. 내부 API 호출 (서버 → 서버 통신)
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+      credentials: 'include'
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      // API 명세서의 에러 포맷에 맞춰 처리
+      return {
+        success: false,
+        error: {
+          code: result.errorCode || 'UNKNOWN_ERROR',
+          message: result.detail || '로그인 처리 중 오류가 발생했습니다.',
+        },
+      };
+    }
+
+    return { success: true, data: result.data };
+  } catch (err) {
+    console.error('[LoginService Error]', err);
+    return {
+      success: false,
+      error: { code: 'NETWORK_ERROR', message: '서버와 통신할 수 없습니다.' },
     };
   }
 }
