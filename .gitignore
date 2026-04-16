@@ -54,3 +54,7 @@ Thumbs.db
 .env.local
 .env*.local
 !.env.test
+
+# mock build file
+e2e/scripts/mock-api-server.js
+dist/*

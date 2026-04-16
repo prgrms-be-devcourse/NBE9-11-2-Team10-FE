@@ -2,19 +2,6 @@
 
 import { RegisterRequest } from "@/schemas/auth.schema";
 
-// export type RegisterRole = 'BUYER' | 'SELLER';
-
-// export interface RegisterRequest {
-//   email: string;
-//   password: string;
-//   name: string;
-//   nickname: string;
-//   phoneNumber: string;
-//   roadAddress: string;
-//   detailAddress: string;
-//   role: RegisterRole;
-// }
-
 export interface RegisterSuccessResponse {
   success: true;
   data: {
@@ -67,3 +54,21 @@ export const initialRegisterState: RegisterActionState = {
   },
   errors: {}
 };
+
+export type DuplicateCheckType = 'EMAIL' | 'NICKNAME';
+
+export interface DuplicateCheckResponse {
+  success: boolean;
+  data: {
+    type: DuplicateCheckType;
+    value: string;
+    available: boolean;
+  };
+}
+
+export interface ApiErrorResponse {
+  detail: string;
+  errorCode: string;
+  status: number;
+  timestamp: string;
+}

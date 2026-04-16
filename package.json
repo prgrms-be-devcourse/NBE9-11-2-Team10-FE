@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test:e2e": "pnpm run mock:server & next dev & sleep 3 && playwright test",
     "mock:server": "tsx e2e/scripts/mock-api-server.ts",
-    "mock:server:build": "tsc e2e/scripts/mock-api-server.ts --outDir dist/mock --module commonjs"
+    "mock:server:build": "tsc --project tsconfig.mock.json"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -25,10 +25,12 @@
     "@mswjs/http-middleware": "^0.10.3",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",

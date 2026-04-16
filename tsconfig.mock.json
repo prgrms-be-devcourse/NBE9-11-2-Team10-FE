@@ -1,0 +1,12 @@
+// tsconfig.mock.json
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "noEmit": false,
+      "isolatedModules": false
+    },
+    "include": ["e2e/scripts/mock-api-server.ts"],
+    "exclude": ["node_modules"]
+  }
