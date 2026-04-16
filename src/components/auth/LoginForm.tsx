@@ -1,48 +1,48 @@
 // components/auth/LoginForm.tsx
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
+// import { useForm } from 'react-hook-form';
+// import { zodResolver } from '@hookform/resolvers/zod';
+// import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { loginSchema, LoginFormValues } from '@/schemas/auth.schema'; // 이전 답변에서 정의된 스키마
-import { useAuth } from '@/hooks/useAuth'; // 이전 답변에서 정의된 훅
+// import { loginSchema, LoginFormValues } from '@/schemas/auth.schema';
+// import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginForm() {
-  const router = useRouter();
-  const { login } = useAuth();
+  // const router = useRouter();
+  // const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    mode: 'onChange',
-    defaultValues: {
-      identifier: '',
-      password: ''
-    },
-  });
+  // const {
+  //   register,
+  //   handleSubmit,
+  //   formState: { errors },
+  // } = useForm<LoginFormValues>({
+  //   resolver: zodResolver(loginSchema),
+  //   mode: 'onChange',
+  //   defaultValues: {
+  //     identifier: '',
+  //     password: ''
+  //   },
+  // });
 
-  const onSubmit = async (data: LoginFormValues) => {
-    setIsLoading(true);
-    setError(null);
+  // const onSubmit = async (data: LoginFormValues) => {
+  //   setIsLoading(true);
+  //   setError(null);
 
-    // useAuth 훅 호출 (Cookie-Only 아키텍처에 맞춰 동작)
-    const result = await login(data.identifier, data.password);
+  //   // useAuth 훅 호출 (Cookie-Only 아키텍처에 맞춰 동작)
+  //   const result = await login(data.identifier, data.password);
     
-    setIsLoading(false);
+  //   setIsLoading(false);
 
-    if (result.success) {
-      // 로그인 성공 시 리다이렉트 (훅 내부에서 처리될 수도 있음)
-      router.push('/dashboard'); 
-    } else {
-      setError(result.error || "Login Failed.");
-    }
-  };
+  //   if (result.success) {
+  //     // 로그인 성공 시 리다이렉트 (훅 내부에서 처리될 수도 있음)
+  //     router.push('/dashboard'); 
+  //   } else {
+  //     setError(result.error || "Login Failed.");
+  //   }
+  // };
 
   const handleGoogleLogin = () => {
     // 추후 구글 OAuth 개발 시 구현
@@ -58,7 +58,7 @@ export default function LoginForm() {
         {/* 필요시 로고 이미지로 교체 가능 */}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form className="space-y-6">
         
         {/* 아이디 입력 */}
         <div>
@@ -66,11 +66,11 @@ export default function LoginForm() {
             <input
               type="text"
               placeholder="아이디 (이메일)"
-              {...register('identifier')}
-              className={`w-full px-4 py-4 bg-gray-100 border-transparent rounded-md focus:bg-white focus:border-blue-500 focus:ring-0 text-gray-700 placeholder-gray-400 transition-all ${errors.identifier ? 'border-red-500 focus:border-red-500' : ''}`}
+              // {...register('identifier')}
+              className={`w-full px-4 py-4 bg-gray-100 border-transparent rounded-md focus:bg-white focus:border-blue-500 focus:ring-0 text-gray-700 placeholder-gray-400 transition-all`}
             />
           </div>
-          {errors.identifier && <p className="mt-1 text-xs text-red-500">{errors.identifier.message}</p>}
+          {/* {errors.identifier && <p className="mt-1 text-xs text-red-500">{errors.identifier.message}</p>} */}
         </div>
 
         {/* 비밀번호 입력 */}
@@ -79,11 +79,11 @@ export default function LoginForm() {
             <input
               type="password"
               placeholder="비밀번호"
-              {...register('password')}
-              className={`w-full px-4 py-4 bg-gray-100 border-transparent rounded-md focus:bg-white focus:border-blue-500 focus:ring-0 text-gray-700 placeholder-gray-400 transition-all ${errors.password ? 'border-red-500 focus:border-red-500' : ''}`}
+              // {...register('password')}
+              className={`w-full px-4 py-4 bg-gray-100 border-transparent rounded-md focus:bg-white focus:border-blue-500 focus:ring-0 text-gray-700 placeholder-gray-400 transition-all`}
             />
           </div>
-          {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
+          {/* {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>} */}
         </div>
 
         {/* 에러 메시지 표시 */}

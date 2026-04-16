@@ -17,7 +17,7 @@ function RegisterContent() {
 
   // role 파라미터가 있으면 2단계 (폼 입력)
   if (role === 'BUYER' || role === 'SELLER') {
-    return <RegisterForm role={role} />;
+    return <RegisterForm key={role} role={role} />;
   }
 
   // 잘못된 role 값 처리

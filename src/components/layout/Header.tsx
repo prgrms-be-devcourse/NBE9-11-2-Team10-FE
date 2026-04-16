@@ -2,29 +2,34 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuthStore } from '@/stores/useAuthStore';
+// import { useAuthStore } from '@/stores/useAuthStore';
 import { useRouter } from 'next/navigation';
-import { authApi } from '@/lib/api/auth';
+// import { authApi } from '@/lib/api/auth';
 
 export default function Header() {
-    const { user, status, logout: clearLocal } = useAuthStore();
+    // const { user, status, logout: clearLocal } = useAuthStore();
+    const { user, status, logout: clearLocal } = {
+        user: undefined,
+        status: "active",
+        logout: () => {}
+    };
     const router = useRouter();
 
     // 로그인 상태 확인
     const isLoggedIn = !!user;
 
     const handleLogout = async () => {
-        try {
-            // 서버 쿠키 삭제 요청
-            await authApi.logout();
-        } catch (e) {
-            console.error('Logout failed', e);
-        } finally {
-            // 로컬 상태 초기화
-            clearLocal();
-            router.push('/login');
-            router.refresh(); // 클라이언트 상태 갱신
-        }
+        // try {
+        //     // 서버 쿠키 삭제 요청
+        //     await authApi.logout();
+        // } catch (e) {
+        //     console.error('Logout failed', e);
+        // } finally {
+        //     // 로컬 상태 초기화
+        //     clearLocal();
+        //     router.push('/login');
+        //     router.refresh(); // 클라이언트 상태 갱신
+        // }
     };
 
     return (
@@ -42,7 +47,7 @@ export default function Header() {
 
                         {/* 로그인 시 사용자 이름 표시 */}
                         {isLoggedIn ? (
-                            <span className="text-lg font-semibold text-gray-800">{user.email} 님</span>
+                            <span className="text-lg font-semibold text-gray-800">{/*user.email*/} 님</span>
                         ) : (
                             <span className="text-lg font-semibold text-gray-400">Guest</span>
                         )}

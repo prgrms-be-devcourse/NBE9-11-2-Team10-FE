@@ -30,9 +30,6 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
-
 # vercel
 .vercel
 
@@ -42,3 +39,18 @@ next-env.d.ts
 
 # for pnpm only
 pnpm-lock.yaml
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+e2e/.auth/
+
+# OS 별 시스템 파일
+.DS_Store
+Thumbs.db
+
+# 환경 변수 (테스트용 제외)
+.env.local
+.env*.local
+!.env.test
