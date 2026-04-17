@@ -7,8 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:e2e": "pnpm run mock:server & next dev & sleep 3 && playwright test",
-    "mock:server": "tsx e2e/scripts/mock-api-server.ts",
+    "test:e2e": "bash scripts/run-e2e.sh",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:debug": "PWDEBUG=1 playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "mock:server": "tsx e2e/mock-server/mock-api-server.ts",
     "mock:server:build": "tsc --project tsconfig.mock.json"
   },
   "dependencies": {

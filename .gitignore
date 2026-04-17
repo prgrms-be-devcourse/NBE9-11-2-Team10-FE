@@ -37,9 +37,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# for pnpm only
-pnpm-lock.yaml
-
 # Playwright
 playwright-report/
 test-results/
@@ -56,5 +53,4 @@ Thumbs.db
 !.env.test
 
 # mock build file
-e2e/scripts/mock-api-server.js
 dist/*
