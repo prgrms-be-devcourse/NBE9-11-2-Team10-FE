@@ -46,7 +46,7 @@ test.describe('상품 관리 E2E', () => {
   });
 
   test('상품 목록을 페이징과 필터로 조회할 수 있다', async ({ request }) => {
-    const response = await request.get(`${MOCK_API}/products?page=0&size=2&type=BOOK`);
+    const response = await request.get(`${MOCK_API}/products?page=1&size=2&type=BOOK`);
     
     expect(response.status()).toBe(200);
     const body = await response.json();
@@ -54,7 +54,7 @@ test.describe('상품 관리 E2E', () => {
       content: expect.arrayContaining([
         expect.objectContaining({ type: 'BOOK' })
       ]),
-      page: 0,
+      page: 1,
       size: 2,
       totalElements: expect.any(Number),
     });

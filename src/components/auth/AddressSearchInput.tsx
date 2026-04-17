@@ -38,7 +38,7 @@ export const AddressSearchInput = ({
           disabled={disabled}
           className={`flex-1 px-3 py-2.5 border rounded-lg text-sm ${
             error ? 'border-red-500' : 'border-gray-300'
-          } ${disabled ? 'bg-gray-100' : ''}`}
+          } ${disabled ? 'bg-gray-100' : ''} text-gray-900`}
         />
         <button
           type="button"

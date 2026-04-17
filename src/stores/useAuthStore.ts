@@ -1,7 +1,7 @@
 import { logout } from '@/lib/api/auth';
 import { create } from 'zustand';
 
-export type UserRole = 'BUYER' | 'SELLER' | 'ADMIN';
+export type UserRole = 'BUYER' | 'SELLER';
 
 export interface User {
   id: number;

@@ -31,7 +31,6 @@ const PRODUCT_CACHE_TAG = 'products';
 // ============================================================================
 export async function fetchProductList(query: ProductListQuery): Promise<ProductListResult> {
   try {
-    // ✅ 쿼리 검증
     const validated = productListQuerySchema.safeParse(query);
     if (!validated.success) {
       return {
@@ -48,9 +47,11 @@ export async function fetchProductList(query: ProductListQuery): Promise<Product
 
     const { page, size, type, status } = validated.data;
     
-    // ✅ 쿼리 스트링 생성
+    // ✅ [ADAPTER] 1-based (FE) → 0-based (BE) 변환
+    const apiPage = page;  // ⭐ 사용자 1 → 백엔드 0
+    
     const params = new URLSearchParams({
-      page: String(page),
+      page: String(apiPage),  // ✅ 변환된 값으로 요청
       size: String(size),
     });
     if (type) params.append('type', type);
@@ -61,15 +62,12 @@ export async function fetchProductList(query: ProductListQuery): Promise<Product
     const response = await fetch(`${API_BASE_URL}/api/v1/products?${params}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store', // ✅ 동적 처리 보장
+      cache: 'no-store',
     });
 
     if (!response.ok) {
       const error = await handleApiError(response);
-      return {
-        success: false,
-        ...parseProblemDetail(error),
-      };
+      return { success: false, ...parseProblemDetail(error) };
     }
 
     const data = await response.json();

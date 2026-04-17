@@ -29,74 +29,41 @@ const parsePositiveInt = (value: unknown, fallback: number): number => {
 // 🔹 GET / - 상품 목록 조회 (페이징 + 필터)
 // ============================================================================
 router.get('/', (req: Request, res: Response) => {
-  // ✅ 쿼리 파라미터 추출
-  const page = parsePositiveInt(req.query.page, 0);
-  const size = Math.min(parsePositiveInt(req.query.size, 10), 100); // 최대 100
+  // ✅ 1. 사용자 입력 파싱 (1-based)
+  const userPage = parsePositiveInt(req.query.page, 1); // ✅ 기본값 1 로 변경
+  const size = Math.min(parsePositiveInt(req.query.size, 10), 100);
   const typeFilter = parseQuery(req.query.type);
   const statusFilter = parseQuery(req.query.status);
 
-  // ✅ 페이지/사이즈 검증
-  if (page < 0) {
+  // ✅ 2. 검증 (1-based 기준)
+  if (userPage < 1) {  // ✅ 0 이 아닌 1 부터 시작
     return res.status(400).json(
       createErrorResponse(
         400,
         'CONSTRAINT_VIOLATION',
         '입력값 검증에 실패했습니다.',
         '/api/v1/products',
-        { detail: 'page 는 0 이상의 정수여야 합니다.' }
-      )
-    );
-  }
-  if (size < 1 || size > 100) {
-    return res.status(400).json(
-      createErrorResponse(
-        400,
-        'CONSTRAINT_VIOLATION',
-        '입력값 검증에 실패했습니다.',
-        '/api/v1/products',
-        { detail: 'size 는 1~100 사이의 정수여야 합니다.' }
+        { detail: 'page 는 1 이상의 정수여야 합니다.' }  // ✅ 메시지 수정
       )
     );
   }
 
-  // ✅ enum 필터 검증
-  if (typeFilter && !VALID_TYPES.includes(typeFilter as any)) {
-    return res.status(400).json(
-      createErrorResponse(
-        400,
-        'TYPE_MISMATCH',
-        '입력값 검증에 실패했습니다.',
-        '/api/v1/products',
-        { detail: `타입 변환 실패: 매개변수 'type' 의 값 '${typeFilter}' 이 (가) 올바르지 않습니다.` }
-      )
-    );
-  }
-  if (statusFilter && !PUBLIC_STATUSES.includes(statusFilter as any)) {
-    return res.status(400).json(
-      createErrorResponse(
-        400,
-        'TYPE_MISMATCH',
-        '입력값 검증에 실패했습니다.',
-        '/api/v1/products',
-        { detail: `타입 변환 실패: 매개변수 'status' 의 값 '${statusFilter}' 이 (가) 올바르지 않습니다.` }
-      )
-    );
-  }
+  // ✅ 3. 내부 로직용 변환: 1-based → 0-based
+  const internalPage = userPage - 1;  // ⭐ 핵심: API 내부 처리용
 
-  // ✅ 데이터 조회 (필터링 적용)
+  // ✅ 4. 데이터 조회 (기존 로직 동일)
   const filtered = ProductStore.findAll({
     type: typeFilter as any,
     status: statusFilter as any,
-    excludeInactive: true, // 공용 조회에서는 INACTIVE 제외
+    excludeInactive: true,
   });
 
-  // ✅ 페이징
+  // ✅ 5. 페이징 (내부 0-based 사용)
   const totalElements = filtered.length;
   const totalPages = Math.ceil(totalElements / size);
-  const startIndex = page * size;
+  const startIndex = internalPage * size;  // ✅ internalPage 사용
   const paginated = filtered.slice(startIndex, startIndex + size);
 
-  // ✅ 응답 포맷팅 (목록 응답: description, stock 제외)
   const content = paginated.map(p => ({
     productId: p.productId,
     productName: p.productName,
@@ -106,9 +73,10 @@ router.get('/', (req: Request, res: Response) => {
     status: p.status,
   }));
 
+  // ✅ 6. 응답은 사용자 친화적 1-based 로 반환
   return res.status(200).json({
     content,
-    page,
+    page: userPage,      // ✅ 1-based 로 응답
     size,
     totalElements,
     totalPages,

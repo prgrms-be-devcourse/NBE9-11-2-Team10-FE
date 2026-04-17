@@ -15,17 +15,37 @@ declare global {
 }
 
 // ============================================================================
-// 🔍 헬퍼: 헤더에서 사용자 ID 추출
+// 🔍 헬퍼: 헤더/쿠키 에서 사용자 ID 추출 (accessToken 지원 추가)
 // ============================================================================
 const getMockUserId = (req: Request): string | null => {
-  // E2E 테스트용: X-Mock-User-Id 헤더 우선
+  // ✅ 1순위: 테스트용 헤더 (명시적)
+  const e2eHeader = req.headers['x-e2e-user-id'];
+  if (typeof e2eHeader === 'string') return e2eHeader;
+  
   const headerId = req.headers['x-mock-user-id'];
   if (typeof headerId === 'string') return headerId;
   
-  // fallback: 쿠키 (필요시 확장)
+  // ✅ 2순위: 실제 로그인 플로우의 accessToken 쿠키 (단순 형식 파싱)
+  const accessToken = req.cookies?.accessToken;
+  if (accessToken && typeof accessToken === 'string' && accessToken.startsWith('mock_access_')) {
+    // 🔹 토큰 형식: "mock_access_{userId}_{timestamp}"
+    // 예: "mock_access_1002_1704067200000"
+    const parts = accessToken.split('_');
+    if (parts.length >= 3) {
+      const userId = parts[2];  // "1002" 추출
+      console.log(`✅ [getMockUserId] Parsed userId ${userId} from accessToken`);
+      return userId;
+    }
+  }
+  
+  // ✅ 3순위: 기존 테스트용 쿠키 (하위 호환)
   const cookieId = req.cookies?.mockUserId;
   if (typeof cookieId === 'string') return cookieId;
   
+  // ❌ 인증 정보 없음
+  console.log('❌ [getMockUserId] No valid auth credentials found');
+  console.log('📦 Debug - cookies:', req.cookies);
+  console.log('📦 Debug - cookie header:', req.headers['cookie']);
   return null;
 };
 
@@ -37,6 +57,7 @@ export const mockAuthMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
+
   const userId = getMockUserId(req);
 
   if (!userId) {

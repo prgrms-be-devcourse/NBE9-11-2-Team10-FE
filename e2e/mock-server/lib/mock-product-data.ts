@@ -49,7 +49,7 @@ let products: Product[] = [
     description: '책 설명입니다.',
     price: 10000,
     stock: 100,
-    type: 'BOOK',
+    type: 'EBOOK',
     imageUrl: 'https://example.com/images/book1.jpg',
     status: 'SELLING',
     sellerId: MOCK_USERS.SELLER.id,

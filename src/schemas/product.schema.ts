@@ -1,5 +1,3 @@
-'use client';
-
 import { z } from 'zod';
 
 // ============================================================================
@@ -23,11 +21,11 @@ export const productCreateSchema = z.object({
   
   price: z.number()
     .int('가격은 정수여야 합니다.')
-    .min(0, '가격은 0 이상이어야 합니다.'),
+    .min(1, '가격은 1 이상이어야 합니다.'),
   
   stock: z.number()
     .int('재고는 정수여야 합니다.')
-    .min(0, '재고는 0 이상이어야 합니다.'),
+    .min(1, '재고는 1 이상이어야 합니다.'),
   
   type: productTypeSchema,
   
@@ -36,7 +34,7 @@ export const productCreateSchema = z.object({
     .optional()
     .or(z.literal('')),
   
-  imageUrl: z.url('올바른 URL 형식이어야 합니다.')
+  imageUrl: z.url('올바른 이미지 URL 형식이어야 합니다.')
     .optional()
     .or(z.literal(''))
     .or(z.null()),
@@ -52,7 +50,7 @@ export const productUpdateSchema = z.object({
   
   productName: z.string()
     .min(1, '상품명은 필수입니다.')
-    .max(30, '상품명은 30자 이하여야 합니다.')
+    .max(100, '상품명은 100자 이하여야 합니다.')
     .optional(),
   
   price: z.number()
@@ -72,7 +70,7 @@ export const productUpdateSchema = z.object({
     .optional()
     .or(z.literal('')),
   
-  imageUrl: z.url('올바른 URL 형식이어야 합니다.')
+  imageUrl: z.url('올바른 이미지 URL 형식이어야 합니다.')
     .optional()
     .or(z.literal(''))
     .or(z.null()),
@@ -86,7 +84,12 @@ export type ProductUpdateRequest = z.infer<typeof productUpdateSchema>;
 // 🔹 상품 조회 쿼리 스키마 (공용)
 // ============================================================================
 export const productListQuerySchema = z.object({
-  page: z.coerce.number().int().min(0).default(0),
+  // ✅ page: 1 부터 시작, 기본값 1
+  page: z.coerce.number()
+    .int()
+    .min(1, '페이지는 1 부터 시작합니다.')
+    .default(1),
+  
   size: z.coerce.number().int().min(1).max(100).default(10),
   type: productTypeSchema.optional(),
   status: publicStatusSchema.optional(),

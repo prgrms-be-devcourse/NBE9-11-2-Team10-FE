@@ -1,6 +1,7 @@
 // e2e/mock-server/mock-api-server.ts
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 // 📦 도메인별 라우터 임포트
 import authRoutes from './routes/auth.routes';
@@ -17,6 +18,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 // 🛣️ 도메인별 라우터 마운팅 (명세서와 1:1 매핑)
 app.use('/api/v1/auth', authRoutes);                    // 🔐 인증
