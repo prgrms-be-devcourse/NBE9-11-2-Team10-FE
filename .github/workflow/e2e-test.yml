@@ -1,0 +1,87 @@
+name: E2E Tests
+
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [main]
+
+jobs:
+  e2e:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Build mock server (TypeScript → JS)
+        run: pnpm run mock:server:build
+
+      - name: Run E2E tests
+        run: bash scripts/run-e2e.sh
+        env:
+          CI: true
+          PORT: 3000
+          # 필요한 환경변수들은 .env.test 를 참고하여 추가
+          # NEXT_PUBLIC_XXX: ${{ secrets.NEXT_PUBLIC_XXX }}
+
+      - name: Upload Playwright report (실패 시)
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7
+
+- name: Comment PR with test results
+  if: always()
+  uses: actions/github-script@v7
+  with:
+    script: |
+      const fs = require('fs');
+      const results = JSON.parse(fs.readFileSync('test-results/results.json', 'utf8'));
+      const passed = results.stats.expected;
+      const failed = results.stats.unexpected;
+      const skipped = results.stats.skipped;
+      
+      const body = `### 🧪 E2E Test Results
+      | Status | Count |
+      |--------|-------|
+      | ✅ Passed | ${passed} |
+      | ❌ Failed | ${failed} |
+      | ⏭️ Skipped | ${skipped} |
+      
+      ${failed > 0 ? '🔍 [Report 다운로드](#artifacts)' : '🎉 All tests passed!'}`;
+      
+      await github.rest.issues.createComment({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        issue_number: context.payload.pull_request.number,
+        body: body
+      });
