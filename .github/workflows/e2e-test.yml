@@ -33,12 +33,15 @@ jobs:
         run: pnpm exec playwright install --with-deps
 
       - name: Run E2E tests
-        run: bash scripts/run-e2e.sh
+        run: |
+          # .env.test 를 실제 환경변수로 익스포트
+          set -a
+          source .env.test
+          set +a
+          bash scripts/run-e2e.sh
         env:
           CI: true
           PORT: 3000
-          # 필요한 환경변수들은 .env.test 를 참고하여 추가
-          # NEXT_PUBLIC_XXX: ${{ secrets.NEXT_PUBLIC_XXX }}
 
       - name: Upload Playwright report (실패 시)
         uses: actions/upload-artifact@v4
