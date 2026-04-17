@@ -6,6 +6,7 @@ import cors from 'cors';
 import authRoutes from './routes/auth.routes';
 import productsRoutes from './routes/products.routes';           // 공용: 상품 조회
 import storeProductsRoutes from './routes/store-products.routes' // 판매자: 상품 관리
+import debugRoutes from './routes/debug.routes';
 
 const app = express();
 const PORT = process.env.MOCK_PORT || 4000;
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use('/api/v1/auth', authRoutes);                    // 🔐 인증
 app.use('/api/v1/products', productsRoutes);            // 📦 상품 조회 (공용)
 app.use('/api/v1/stores/me/products', storeProductsRoutes); // 🏪 상품 관리 (판매자)
+app.use('/api/v1/__debug', debugRoutes); // 인증 쿠키 테스트 용 (e2e 전용)
 
 // 🚨 글로벌 에러 핸들러 (라우터 등록 후 마지막에)
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -41,5 +43,6 @@ app.listen(PORT, () => {
   console.log(`🎭 Mock API Server: http://localhost:${PORT}`);
   console.log(`   ├─ POST /api/v1/auth/*`);
   console.log(`   ├─ GET  /api/v1/products/*`);
-  console.log(`   └─ CRUD /api/v1/stores/me/products/*`);
+  console.log(`   ├─ CRUD /api/v1/stores/me/products/*`);
+  console.log(`   └─ DEBUG /api/v1/__debug`);
 });

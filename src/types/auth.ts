@@ -1,6 +1,7 @@
 // @/types/auth.ts
 
 import { RegisterRequest } from "@/schemas/auth.schema";
+import { ValidationError } from "./common";
 
 export interface RegisterSuccessResponse {
   success: true;
@@ -9,11 +10,6 @@ export interface RegisterSuccessResponse {
     email: string;
     createdAt: string;
   };
-}
-
-export interface ValidationError {
-  field: string;
-  message: string;
 }
 
 export interface RegisterErrorResponse {

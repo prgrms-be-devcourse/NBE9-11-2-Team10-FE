@@ -4,7 +4,7 @@ import { MOCK_USERS } from './mock-user-data';
 // ============================================================================
 // 📦 상품 타입 정의
 // ============================================================================
-export type ProductType = 'BOOK' | 'ELECTRONICS' | 'CLOTHING' | 'FOOD' | 'OTHER';
+export type ProductType = 'BOOK' | 'EBOOK';
 export type ProductStatus = 'SELLING' | 'SOLD_OUT' | 'INACTIVE';
 
 export interface Product {
@@ -24,7 +24,7 @@ export interface Product {
 // ============================================================================
 // 🗄️ In-Memory Store
 // ============================================================================
-export const VALID_TYPES: readonly ProductType[] = ['BOOK', 'ELECTRONICS', 'CLOTHING', 'FOOD', 'OTHER'];
+export const VALID_TYPES: readonly ProductType[] = ['BOOK', 'EBOOK'];
 export const VALID_STATUSES: readonly ProductStatus[] = ['SELLING', 'SOLD_OUT', 'INACTIVE'];
 export const PUBLIC_STATUSES: readonly ProductStatus[] = ['SELLING', 'SOLD_OUT']; // INACTIVE 는 공개되지 않음
 
@@ -62,7 +62,7 @@ let products: Product[] = [
     description: '재고가 없는 상품입니다.',
     price: 25000,
     stock: 0,
-    type: 'ELECTRONICS',
+    type: 'EBOOK',
     imageUrl: null,
     status: 'SOLD_OUT',
     sellerId: MOCK_USERS.SELLER.id,
@@ -169,7 +169,7 @@ export const ProductStore = {
         description: '재고가 없는 상품입니다.',
         price: 25000,
         stock: 0,
-        type: 'ELECTRONICS',
+        type: 'EBOOK',
         imageUrl: null,
         status: 'SOLD_OUT',
         sellerId: MOCK_USERS.SELLER.id,

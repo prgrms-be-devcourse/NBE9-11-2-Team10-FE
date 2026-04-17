@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-const MOCK_API = 'http://localhost:4000/api/v1';
+const MOCK_ADDRESS = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const MOCK_API = `${MOCK_ADDRESS}/api/v1`;
 const SELLER_ID = '1002'; // MOCK_USERS.SELLER.id
 
 test.describe('상품 관리 E2E', () => {
@@ -95,7 +96,7 @@ test.describe('상품 관리 E2E', () => {
     // 1. 상품 등록
     const createRes = await request.post(`${MOCK_API}/stores/me/products`, {
       headers: { 'x-mock-user-id': SELLER_ID },
-      data: { productName: '비활성화 대상', price: 5000, stock: 5, type: 'FOOD' },
+      data: { productName: '비활성화 대상', price: 5000, stock: 5, type: 'EBOOK' },
     });
     const { productId } = await createRes.json();
 
@@ -107,7 +108,7 @@ test.describe('상품 관리 E2E', () => {
     expect(deactivateRes.status()).toBe(200);
 
     // 3. 목록 조회 시 제외됨 확인
-    const listRes = await request.get(`${MOCK_API}/products?type=FOOD`);
+    const listRes = await request.get(`${MOCK_API}/products?type=EBOOK`);
     const listBody = await listRes.json();
     expect(listBody.content).not.toContainEqual(
       expect.objectContaining({ productId })
