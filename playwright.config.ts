@@ -12,7 +12,11 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   
-  reporter: 'html',
+  reporter: [
+    ['list'],
+    ['json', { outputFile: 'test-results/results.json' }],
+    ['html', { open: 'never', outputFolder: 'playwright-report' }],
+  ],
   
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
@@ -20,7 +24,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
-  webServer: {
+  webServer: process.env.CI ? undefined : {
     command: 'npm run dev', // 또는 'next dev'
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI, // 로컬에서 기존 서버 재사용

@@ -1,0 +1,111 @@
+name: E2E Tests
+
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [main, dev]
+
+jobs:
+  e2e:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Run E2E tests
+        run: |
+          # .env.test 를 실제 환경변수로 익스포트
+          set -a
+          source .env.test
+          set +a
+          bash scripts/run-e2e.sh
+        env:
+          CI: true
+          PORT: 3000
+
+      - name: Upload Playwright report (실패 시)
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7
+
+
+      - name: Comment PR with test results
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'test-results/results.json';
+            
+            if (!fs.existsSync(path)) {
+              core.warning('⚠️ results.json 이 생성되지 않았습니다.');
+              return;
+            }
+
+            const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+            
+            // Playwright JSON 구조에서 카운트 추출
+            let passed = 0, failed = 0, skipped = 0;
+            function countOutcomes(suites) {
+              for (const suite of suites) {
+                if (suite.specs) {
+                  for (const spec of suite.specs) {
+                    for (const test of spec.tests) {
+                      const outcome = test.outcome || test.status;
+                      if (outcome === 'expected') passed++;
+                      else if (outcome === 'unexpected') failed++;
+                      else if (outcome === 'skipped') skipped++;
+                    }
+                  }
+                }
+                if (suite.suites) countOutcomes(suite.suites);
+              }
+            }
+            countOutcomes(data.suites || []);
+
+            const body = `### 🧪 E2E Test Results
+            | Status | Count |
+            |--------|-------|
+            | ✅ Passed | ${passed} |
+            | ❌ Failed | ${failed} |
+            | ⏭️ Skipped | ${skipped} |
+            
+            ${failed > 0 ? '🔍 [HTML Report 다운로드](#artifacts) 에서 상세 로그를 확인하세요.' : '🎉 All tests passed!'}`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: body
+            });
