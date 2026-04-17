@@ -41,7 +41,7 @@ fi
 
 # 4. Playwright 테스트 실행
 echo "🔍 Playwright 테스트 실행..."
-pnpm exec playwright test "$@" --reporter=list,json
+pnpm exec playwright test "$@"
 TEST_EXIT_CODE=$?
 
 # 4.5. 로컬 환경이면 리포트 자동 오픈
