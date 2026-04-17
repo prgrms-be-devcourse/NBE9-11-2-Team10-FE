@@ -1,6 +1,7 @@
 // e2e/mocks/auth.routes.ts
 import { Router } from 'express';
-import { createErrorResponse, MOCK_USERS } from '../mock-server/lib/mock-data';
+import { MOCK_USERS } from '../lib/mock-user-data';
+import { createErrorResponse } from '../lib/mock-common-data';
 
 const router = Router();
 

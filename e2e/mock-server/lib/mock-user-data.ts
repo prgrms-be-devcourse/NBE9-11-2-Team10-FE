@@ -1,5 +1,3 @@
-// e2e/scripts/lib/mock-data.ts
-
 export type MockUser = {
     id: number;
     email: string;
@@ -24,20 +22,18 @@ export type MockUser = {
       nickname: '중복닉네임',
       role: 'BUYER',
     },
+    BUYER: {
+      id: 1001,
+      email: 'buyer@example.com',
+      password: 'buyer1234!',
+      nickname: '구매자님',
+      role: 'BUYER' as const,
+    },
+    SELLER: {
+      id: 1002,
+      email: 'seller@example.com',
+      password: 'seller1234!',
+      nickname: '판매자님',
+      role: 'SELLER' as const,
+    },
   };
-  
-  // ✅ 에러 응답 팩토리 (일관된 포맷 유지)
-  export const createErrorResponse = (
-    status: number,
-    errorCode: string,
-    detail: string,
-    instance: string
-  ) => ({
-    detail,
-    instance,
-    status,
-    title: status === 400 ? 'Bad Request' : status === 404 ? 'Not Found' : 'Error',
-    type: `https://api.example.com/errors/${errorCode}`,
-    errorCode,
-    timestamp: new Date().toISOString(),
-  });
