@@ -3,14 +3,6 @@ import { test, expect } from "@playwright/test";
 const NEXT_APP = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 test.describe("쿠키 포워딩 검증 (Next.js 라우터 통함)", () => {
-  test.beforeAll(() => {
-    // 🔍 실행 시점의 실제 환경변수 확인
-    console.log("🔍 [E2E ENV CHECK]");
-    console.log("  NEXT_PUBLIC_APP_URL:", process.env.NEXT_PUBLIC_APP_URL);
-    console.log("  NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
-    console.log("  NODE_ENV:", process.env.NODE_ENV);
-  });
-
   test.beforeEach(async ({ page }) => {
     // 🔹 브라우저 컨텍스트에 테스트용 쿠키 주입
     await page.context().addCookies([
