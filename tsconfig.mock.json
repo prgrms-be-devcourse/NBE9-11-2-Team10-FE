@@ -7,6 +7,6 @@
       "noEmit": false,
       "isolatedModules": false
     },
-    "include": ["e2e/scripts/mock-api-server.ts"],
+    "include": ["e2e/mock-server/mock-api-server.ts"],
     "exclude": ["node_modules"]
   }

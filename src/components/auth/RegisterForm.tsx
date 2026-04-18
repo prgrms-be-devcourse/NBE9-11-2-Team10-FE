@@ -132,7 +132,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
                 }
               }}
               className={`flex-1 px-3 py-2.5 border rounded-lg text-sm ${state.errors.email ? 'border-red-500' : 'border-gray-300'
-                } ${checkState.email.message && !checkState.email.available ? 'border-red-500' : ''}`}
+                } ${checkState.email.message && !checkState.email.available ? 'border-red-500' : ''} text-gray-900`}
               placeholder="example@email.com"
             />
             <button
@@ -171,7 +171,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
             type="password"
             defaultValue={state.formData.password}
             className={`w-full px-3 py-2.5 border rounded-lg text-sm ${state.errors.password ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } text-gray-900`}
             placeholder="8~20자, 영문과 숫자 포함"
           />
           {state.errors.password && (
@@ -189,7 +189,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
             type="text"
             defaultValue={state.formData.name}
             className={`w-full px-3 py-2.5 border rounded-lg text-sm ${state.errors.name ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } text-gray-900`}
             placeholder="실명을 입력해 주세요"
           />
           {state.errors.name && (
@@ -218,7 +218,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
                 }
               }}
               className={`flex-1 px-3 py-2.5 border rounded-lg text-sm ${state.errors.nickname ? 'border-red-500' : 'border-gray-300'
-                } ${checkState.nickname.message && !checkState.nickname.available ? 'border-red-500' : ''}`}
+                } ${checkState.nickname.message && !checkState.nickname.available ? 'border-red-500' : ''} text-gray-900`}
               placeholder="2~20자, 영문/숫자/한글/_"
             />
             <button
@@ -257,7 +257,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
             type="tel"
             defaultValue={state.formData.phoneNumber}
             className={`w-full px-3 py-2.5 border rounded-lg text-sm ${state.errors.phoneNumber ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } text-gray-900`}
             placeholder="010-0000-0000"
           />
           {state.errors.phoneNumber && (
@@ -282,7 +282,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
             placeholder="상세주소 (동/호수, 층)"
             disabled={isPending}
             className={`w-full px-3 py-2.5 border rounded-lg text-sm ${state.errors.address ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } text-gray-900`}
           />
           {state.errors.detailAddress && (
             <p className="mt-1 text-sm text-red-600">{state.errors.detailAddress}</p>
