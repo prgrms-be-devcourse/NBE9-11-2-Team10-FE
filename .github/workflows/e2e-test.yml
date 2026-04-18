@@ -15,6 +15,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+        # 🔽 1. 환경변수 영구 주입
+      - name: Export environment variables to $GITHUB_ENV
+        run: |
+          echo "NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}" >> $GITHUB_ENV
+          echo "API_BASE_URL=${{ vars.API_BASE_URL }}" >> $GITHUB_ENV
+          echo "NODE_ENV=test" >> $GITHUB_ENV
+
       - name: Export environment variables
         run: |
           echo "NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}" >> $GITHUB_ENV
@@ -22,21 +30,22 @@ jobs:
           echo "API_BASE_URL=${{ vars.API_BASE_URL }}" >> $GITHUB_ENV
           echo "NODE_ENV=test" >> $GITHUB_ENV
 
-      - name: Create .env.local for Next.js
-        run: |
-          cat << EOF > .env.local
+      # 🔽 .env.test 파일 생성 (들여쓰기 주의: |- 사용)
+      - name: Create .env.test for Next.js
+        run: |-
+          cat << EOF > .env.test
           NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
           API_BASE_URL=${{ vars.API_BASE_URL }}
           NODE_ENV=test
           EOF
 
-      - name: Debug environment
+      - name: Debug .env.test content
         run: |
-          echo "=== Shell env ==="
-          echo "NEXT_PUBLIC_API_URL: $NEXT_PUBLIC_API_URL"
-          echo "=== .env.local content ==="
-          cat .env.local
+          echo "=== .env.test 파일 내용 (공백 확인용) ==="
+          cat -A .env.test  # -A 옵션: 공백/탭/개행문자 표시
+          echo "=== 변수 값 확인 ==="
+          grep NEXT_PUBLIC .env.test
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
