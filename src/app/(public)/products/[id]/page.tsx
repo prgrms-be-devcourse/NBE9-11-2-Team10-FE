@@ -27,7 +27,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   // ❌ 에러 처리
   if (!result.success) {
-    console.log(JSON.stringify(result));
     if (result.status === 404) notFound();
 
     return (
