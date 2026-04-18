@@ -15,21 +15,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-        # 🔽 .env.test 동적 생성 (variables/secrets 참조)
-      - name: Create .env.test
+      - name: Export environment variables
         run: |
-          cat << EOF > .env.test
+          echo "NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}" >> $GITHUB_ENV
+          echo "API_BASE_URL=${{ vars.API_BASE_URL }}" >> $GITHUB_ENV
+          echo "NODE_ENV=test" >> $GITHUB_ENV
+
+      - name: Create .env.local for Next.js
+        run: |
+          cat << EOF > .env.local
           NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
           API_BASE_URL=${{ vars.API_BASE_URL }}
-          NODE_ENV=${{ vars.NODE_ENV }}
+          NODE_ENV=test
           EOF
 
       - name: Debug environment
         run: |
+          echo "=== Shell env ==="
           echo "NEXT_PUBLIC_API_URL: $NEXT_PUBLIC_API_URL"
-          echo "NODE_ENV: $NODE_ENV"
-          cat .env.test
+          echo "=== .env.local content ==="
+          cat .env.local
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -56,7 +63,7 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
           API_BASE_URL: ${{ vars.API_BASE_URL }}
-          NODE_ENV: ${{ vars.NODE_ENV }}
+          NODE_ENV: test
 
       - name: Upload Playwright report (실패 시)
         uses: actions/upload-artifact@v4
