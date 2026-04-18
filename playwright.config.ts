@@ -2,8 +2,8 @@
 import { defineConfig, devices } from "@playwright/test";
 import { config } from "dotenv";
 
-// ✅ .env.local 를 명시적으로 로드 (가장 중요!)
-config({ path: ".env.local" });
+// ✅ .env.test 를 명시적으로 로드 (가장 중요!)
+config({ path: ".env.test" });
 
 export default defineConfig({
   testDir: "./e2e",
