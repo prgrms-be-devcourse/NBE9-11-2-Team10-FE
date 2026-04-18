@@ -1,9 +1,5 @@
 // playwright.config.ts
 import { defineConfig, devices } from "@playwright/test";
-import { config } from "dotenv";
-
-// ✅ .env.test 를 명시적으로 로드 (가장 중요!)
-config({ path: ".env.test" });
 
 export default defineConfig({
   testDir: "./e2e",
@@ -19,7 +15,7 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: process.env.BASE_URL || "http://localhost:3000",
+    baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
