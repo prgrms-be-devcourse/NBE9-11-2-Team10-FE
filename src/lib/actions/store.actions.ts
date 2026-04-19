@@ -5,10 +5,9 @@ import { redirect } from "next/navigation";
 import {
   updateStoreProfile,
   checkNicknameAvailability,
-  ApiError,
-  ValidationError,
 } from "@/lib/services/store.service";
 import { ProfileUpdateRequest } from "@/schemas/store.schema";
+import { ApiError, ValidationError } from "@/utils/error/stores.error";
 
 // ============================================================================
 // 🔹 프로필 수정 액션 (폼 제출용)

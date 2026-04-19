@@ -308,7 +308,10 @@ router.put(
 // 🔹 GET /{sellerId}/profile - 공개 프로필 조회 (공용)
 // ============================================================================
 router.get("/:sellerId/profile", (req: Request, res: Response) => {
-  const { sellerId } = req.params;
+  const rawSellerId = req.params.sellerId;
+
+  // ✅ 타입 가드: 배열이면 첫 번째 요소 사용, 아니면 그대로 사용
+  const sellerId = Array.isArray(rawSellerId) ? rawSellerId[0] : rawSellerId;
 
   // 1. 프로필 데이터 조회
   const profile = StoreProfileStore.findBySellerId(sellerId);

@@ -18,52 +18,7 @@ import {
   NicknameCheckResponse,
 } from "@/types/store";
 import { getForwardedHeaders, handleApiError } from "@/utils/helper";
-import { ProblemDetailError } from "@/types/common";
-
-// ============================================================================
-// 🚨 커스텀 에러 클래스 (파일 상단에 정의)
-// ============================================================================
-export class ApiError extends Error {
-  public readonly type: string;
-  public readonly title: string;
-  public readonly status: number;
-  public readonly detail: string;
-  public readonly errorCode: string;
-  public readonly instance?: string;
-  public readonly traceId?: string;
-  public readonly validationErrors?: Array<{ field: string; message: string }>;
-
-  constructor(problem: ProblemDetailError) {
-    super(problem.detail || "API 요청 중 오류가 발생했습니다.");
-    this.name = "ApiError";
-    this.type = problem.type;
-    this.title = problem.title;
-    this.status = problem.status;
-    this.detail = problem.detail;
-    this.errorCode = problem.errorCode;
-    this.instance = problem.instance;
-    this.traceId = problem.traceId;
-    this.validationErrors = problem.validationErrors;
-  }
-
-  static fromProblemDetail(problem: ProblemDetailError): ApiError {
-    return new ApiError(problem);
-  }
-
-  toString(): string {
-    return `[${this.errorCode}] ${this.detail} (status: ${this.status})`;
-  }
-}
-
-export class ValidationError extends Error {
-  public readonly fields: Array<{ field: string; message: string }>;
-  constructor(fields: Array<{ field: string; message: string }>) {
-    super("입력값 검증에 실패했습니다.");
-    this.name = "ValidationError";
-    this.fields = fields;
-  }
-}
-
+import { ApiError, ValidationError } from "@/utils/error/stores.error";
 // ============================================================================
 // ⚙️ 설정
 // ============================================================================
@@ -239,7 +194,19 @@ export async function fetchCommentList(
     throw new Error("유효한 판매자 ID 와 피드 ID 가 필요합니다.");
   }
 
-  const { page = 0, size = 20, sort = "createdAt,desc" } = query || {};
+  const validatedQuery = commentListQuerySchema.safeParse(query);
+
+  if (!validatedQuery.success) {
+    throw new ValidationError(
+      validatedQuery.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      })),
+    );
+  }
+
+  const { page, size, sort } = validatedQuery.data;
+
   const params = new URLSearchParams({
     page: String(page),
     size: String(size),
