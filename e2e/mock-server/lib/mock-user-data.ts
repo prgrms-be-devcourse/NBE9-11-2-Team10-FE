@@ -3,7 +3,7 @@ export type MockUser = {
     email: string;
     password: string;
     nickname: string;
-    role: 'BUYER' | 'SELLER' | 'ADMIN';
+    role: 'BUYER' | 'SELLER';
   };
   
   // ✅ 시나리오별 사용자 데이터

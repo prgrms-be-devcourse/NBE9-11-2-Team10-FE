@@ -144,4 +144,73 @@ test.describe('회원가입 폼 (RegisterForm)', () => {
     await page.getByTestId('nickname-duplicate-check-btn').click();
     await expect(page.locator('text=값을 입력해 주세요.').nth(1)).toBeVisible();
   });
+
+  // ✅ 시나리오 11: 중복체크 후 다른 필드 오류 시 검증된 필드 유지 테스트
+  test('이메일 중복체크 후 다른 필드 오류가 발생해도 다시 입력했을 때 편집 가능해야 한다', async ({ page }) => {
+    // 1. 이메일 입력 및 중복체크 성공
+    await page.fill('input[name="email"]', 'valid@example.com');
+    await page.getByTestId('email-duplicate-check-btn').click();
+    await expectErrorMessageVisible(page, '사용 가능한 이메일입니다.');
+    await expect(page.locator('button:has-text("확인됨")')).toBeVisible();
+
+    // 2. 다른 필드에 오류 유발하는 값 입력 (비밀번호 형식 위반)
+    await page.fill('input[name="password"]', 'short');
+    await page.fill('input[name="name"]', '테스트');
+    await page.fill('input[name="nickname"]', 'tester');
+    await page.fill('input[name="phoneNumber"]', '010-1111-2222');
+    await page.fill('input[name="roadAddress"]', '예시 주소');
+    await page.fill('input[name="detailAddress"]', '101호');
+
+    // 3. 폼 제출
+    await page.click('button[type="submit"]');
+
+    // 4. 비밀번호 오류 메시지 확인
+    await expectErrorMessageVisible(page, '특수문자를 포함해야 합니다.');
+
+    // 6. ✅ 이메일 필드가 편집 가능해야 함 (disabled 상태가 아님)
+    await expect(page.locator('input[name="email"]')).not.toBeDisabled();
+
+    // 7. ✅ 이메일 수정 시도 가능 (기존 값 지우고 새 값 입력)
+    await page.fill('input[name="email"]', 'new@example.com');
+    await expect(page.locator('input[name="email"]')).toHaveValue('new@example.com');
+
+    await page.getByTestId('email-duplicate-check-btn').click();
+
+    // 로딩 상태 거친 후 성공 메시지 확인
+    await expectErrorMessageVisible(page, '사용 가능한 이메일입니다.');
+    await expect(page.locator('button:has-text("확인됨")')).toBeVisible();
+  });
+
+  // ✅ 시나리오 12: 닉네임도 동일하게 테스트
+  test('닉네임 중복체크 후 다른 필드 오류가 발생해도 다시 입력 했을 때 편집 가능해야 한다', async ({ page }) => {
+    await page.fill('input[name="email"]', 'test@example.com');
+    await page.fill('input[name="password"]', 'TestPass123#');
+    await page.fill('input[name="name"]', '테스트');
+
+    // 닉네임 중복체크 성공
+    await page.fill('input[name="nickname"]', 'ValidNick123');
+    await page.getByTestId('nickname-duplicate-check-btn').click();
+    await expectErrorMessageVisible(page, '사용 가능한 닉네임입니다.');
+
+    // 전화번호 오류 유발
+    await page.fill('input[name="phoneNumber"]', 'invalid-phone');
+    await page.fill('input[name="roadAddress"]', '예시 주소');
+    await page.fill('input[name="detailAddress"]', '101호');
+
+    await page.click('button[type="submit"]');
+    await expectErrorMessageVisible(page, '전화번호 형식이 올바르지 않습니다');
+
+    await expect(page.locator('input[name="nickname"]')).not.toBeDisabled();
+
+    // 수정 가능 확인
+    await page.fill('input[name="nickname"]', 'NewNick456');
+    await expect(page.locator('input[name="nickname"]')).toHaveValue('NewNick456');
+
+    await page.getByTestId('nickname-duplicate-check-btn').click();
+
+    await expectErrorMessageVisible(page, '사용 가능한 닉네임입니다.');
+    await expect(page.locator('button:has-text("확인됨")')).toBeVisible();
+    await expect(page.locator('input[name="nickname"]')).toBeDisabled();
+  });
+
 });
