@@ -13,6 +13,111 @@ export const MOCK_SELLER = MOCK_USERS.SELLER;
 
 export const MOCK_BUYER = MOCK_USERS.BUYER;
 
+// e2e/tests/fixtures/store-fixture.ts 에 추가할 내용
+
+// ============================================================================
+// 🛠️ 프로필 수정 페이지 헬퍼
+// ============================================================================
+export const StoreProfileEditHelpers = {
+  // 📍 수정 페이지 이동
+  goToEditPage: async (page: Page, sellerId: string) => {
+    await page.goto(`/store/${sellerId}/edit`);
+    await expect(page).toHaveURL(`/store/${sellerId}/edit`);
+  },
+
+  // 📍 폼 필드 입력
+  fillProfileForm: async (
+    page: Page,
+    data: {
+      nickname?: string;
+      bio?: string;
+      profileImageUrl?: string;
+      businessName?: string;
+      ceoName?: string;
+    },
+  ) => {
+    if (data.nickname !== undefined) {
+      const field = page.getByLabel('닉네임');
+      await field.clear(); // ✅ 기존 값 완전 제거
+      await field.fill(data.nickname);
+    }
+    if (data.bio !== undefined) {
+      const field = page.getByLabel('소개');
+      await field.clear();
+      await field.fill(data.bio);
+    }
+    if (data.profileImageUrl !== undefined) {
+      const field = page.getByLabel('프로필 이미지 URL');
+      await field.clear();
+      await field.fill(data.profileImageUrl);
+    }
+    if (data.businessName !== undefined) {
+      const field = page.getByLabel('상호명');
+      await field.clear();
+      await field.fill(data.businessName);
+    }
+    if (data.ceoName !== undefined) {
+      const field = page.getByLabel('대표자명');
+      await field.clear();
+      await field.fill(data.ceoName);
+    }
+  },
+
+  // 📍 저장 버튼 클릭
+  clickSaveButton: async (page: Page) => {
+    const saveBtn = page.getByRole('button', { name: '프로필 저장' });
+    await saveBtn.click();
+  },
+
+  // 📍 취소/뒤로가기 버튼 클릭
+  clickCancelButton: async (page: Page) => {
+    const cancelBtn = page.getByRole('link', { name: '← 프로필 보기' });
+    await cancelBtn.click();
+  },
+
+  // 📍 필드 에러 메시지 검증
+  assertFieldError: async (
+    page: Page,
+    fieldName: string,
+    expectedMessage: string,
+  ) => {
+    const field = page.locator(`#${fieldName.split('.').pop()}`);
+    const errorText = field
+    .locator('xpath=../..//p[contains(@class, "text-red-500")]')
+    .filter({ hasText: expectedMessage });
+    await expect(errorText).toBeVisible();
+  },
+
+  // 📍 전역 에러 메시지 검증
+  assertGlobalError: async (page: Page, expectedMessage: string) => {
+    const errorBox = page.locator('.bg-red-50').getByText(expectedMessage);
+    await expect(errorBox).toBeVisible();
+  },
+
+  // 📍 폼 초기값이 프로필 데이터로 채워졌는지 검증
+  assertFormPreFilled: async (page: Page, profile: any) => {
+    await expect(page.getByLabel('닉네임')).toHaveValue(profile.nickname);
+    if (profile.bio) {
+      await expect(page.getByLabel('소개')).toHaveValue(profile.bio);
+    }
+    if (profile.profileImageUrl) {
+      await expect(page.getByLabel('프로필 이미지 URL')).toHaveValue(
+        profile.profileImageUrl,
+      );
+    }
+    if (profile.businessInfo?.businessName) {
+      await expect(page.getByLabel('상호명')).toHaveValue(
+        profile.businessInfo.businessName,
+      );
+    }
+    if (profile.businessInfo?.ceoName) {
+      await expect(page.getByLabel('대표자명')).toHaveValue(
+        profile.businessInfo.ceoName,
+      );
+    }
+  },
+};
+
 // ============================================================================
 // 📦 Mock 스토어 프로필 데이터
 // ============================================================================
@@ -61,6 +166,7 @@ export const test = base.extend<{
   loginAs: (user: MockUser) => Promise<void>;
   loginAsSeller: () => Promise<void>;
   loginAsBuyer: () => Promise<void>;
+  storeEditHelpers: typeof StoreProfileEditHelpers;
 }>({
   storeHelpers: async ({ page }, use) => {
     const helpers = {
@@ -258,6 +364,10 @@ export const test = base.extend<{
     await use(async () => {
       await loginAs(MOCK_BUYER);
     });
+  },
+  storeEditHelpers: async ({}, use) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    await use(StoreProfileEditHelpers);
   },
 });
 

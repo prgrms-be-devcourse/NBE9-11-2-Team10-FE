@@ -6,44 +6,75 @@ import {
   updateStoreProfile,
   checkNicknameAvailability,
 } from "@/lib/services/store.service";
-import { ProfileUpdateRequest } from "@/schemas/store.schema";
 import { ApiError, ValidationError } from "@/utils/error/stores.error";
+import { profileUpdateSchema } from "@/schemas/store.schema";
 
 // ============================================================================
 // 🔹 프로필 수정 액션 (폼 제출용)
 // ============================================================================
+
 export async function handleUpdateProfile(
   prevState: { error?: string; fieldErrors?: Record<string, string> },
   formData: FormData,
 ): Promise<{ error?: string; fieldErrors?: Record<string, string> }> {
+  let result;
   try {
-    const data: ProfileUpdateRequest = {
-      nickname: (formData.get("nickname") as string) || undefined,
-      bio: (formData.get("bio") as string) || undefined,
-      profileImageUrl: (formData.get("profileImageUrl") as string) || null,
-      businessInfo: formData.get("businessInfo")
-        ? {
-            businessName: formData.get("businessName") as string,
-            ceoName: formData.get("ceoName") as string,
-          }
-        : undefined,
+    // 1️⃣ FormData 에서 원시 데이터 추출
+    const rawData: Record<string, any> = {
+      nickname: formData.get("nickname") as string,
+      bio: formData.get("bio") as string,
+      profileImageUrl: formData.get("profileImageUrl") as string,
     };
 
-    // ✅ 빈 문자열 정제
-    if (data.nickname === "") data.nickname = undefined;
-    if (data.bio === "") data.bio = undefined;
-    if (data.profileImageUrl === "") data.profileImageUrl = null;
+    // businessInfo 는 트리거 필드 존재 시만 파싱
+    if (formData.get("businessInfo")) {
+      rawData.businessInfo = {
+        businessName: formData.get("businessName") as string,
+        ceoName: formData.get("ceoName") as string,
+      };
+    }
 
-    // ✅ 서비스 호출 (성공 시 순수 데이터 반환)
-    const result = await updateStoreProfile(data);
+    // 2️⃣ ✅ 빈 문자열 정규화 (스키마 검증 전에 반드시 실행!)
+    if (rawData.nickname === "") rawData.nickname = undefined;
+    if (rawData.bio === "") rawData.bio = undefined;
+    if (rawData.profileImageUrl === "") rawData.profileImageUrl = null;
+    
+    if (rawData.businessInfo) {
+      if (rawData.businessInfo.businessName === "") {
+        rawData.businessInfo.businessName = undefined;
+      }
+      if (rawData.businessInfo.ceoName === "") {
+        rawData.businessInfo.ceoName = undefined;
+      }
+      // 둘 다 비어있으면 businessInfo 자체를 제거 (선택사항)
+      if (
+        !rawData.businessInfo.businessName && 
+        !rawData.businessInfo.ceoName
+      ) {
+        delete rawData.businessInfo;
+      }
+    }
 
-    // ✅ 성공 시 리다이렉트
-    redirect(`/stores/${result.sellerId}`);
+    // 3️⃣ ✅ Zod 스키마로 검증
+    const validated = profileUpdateSchema.safeParse(rawData);
+    if (!validated.success) {
+      return {
+        error: "입력값을 확인해 주세요.",
+        fieldErrors: validated.error.issues.reduce(
+          (acc, issue) => ({
+            ...acc,
+            [issue.path.join(".")]: issue.message,
+          }),
+          {} as Record<string, string>,
+        ),
+      };
+    }
 
-    // unreachable, but for type safety
-    return {};
+    // 4️⃣ ✅ 검증 통과한 데이터로 서비스 호출
+    result = await updateStoreProfile(validated.data);
+
   } catch (error) {
-    // ✅ ValidationError: 필드별 에러 반환
+    // ✅ ValidationError: Zod 검증 실패는 위에서 처리하므로 여기선 서비스 레이어 에러만 처리
     if (error instanceof ValidationError) {
       return {
         error: "입력값을 확인해 주세요.",
@@ -54,11 +85,10 @@ export async function handleUpdateProfile(
       };
     }
 
-    // ✅ ApiError: 백엔드에서 온 에러 메시지 반환
+    // ✅ ApiError: 백엔드에서 온 에러 (예: 닉네임 중복 409)
     if (error instanceof ApiError) {
       return {
         error: error.detail,
-        // errorCode 에 따라 추가 처리 가능
       };
     }
 
@@ -68,6 +98,10 @@ export async function handleUpdateProfile(
       error: "서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
     };
   }
+
+
+    // 5️⃣ ✅ 성공 시 리다이렉트
+    redirect(`/store/${result.sellerId}`);
 }
 
 // ============================================================================

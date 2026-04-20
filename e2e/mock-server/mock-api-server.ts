@@ -1,5 +1,5 @@
 // e2e/mock-server/mock-api-server.ts
-import express from "express";
+import express , { Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import qs from "qs";
@@ -11,6 +11,9 @@ import storeProductsRoutes from "./routes/store-products.routes"; // 판매자: 
 import storeProfileRoutes from "./routes/store-profiles.routes";
 import storeFeedsRoutes from "./routes/store-feeds.routes";
 import debugRoutes from "./routes/debug.routes";
+import { StoreProfileStore } from "./lib/mock-store-profile-data";
+import { ProductStore } from "./lib/mock-product-data";
+import { CommentStore, FeaturedProductStore, FeedStore } from "./lib/mock-feed-data";
 
 const app = express();
 const PORT = process.env.MOCK_PORT || 4000;
@@ -57,6 +60,39 @@ app.use("/api/v1/stores/me/products", storeProductsRoutes); // 🏪 상품 관�
 app.use("/api/v1/stores", storeProfileRoutes);
 app.use("/api/v1/stores", storeFeedsRoutes);
 app.use("/api/v1/__debug", debugRoutes); // 인증 쿠키 테스트 용 (e2e 전용)
+
+app.post("/api/v1/__reset", (req: Request, res: Response) => {
+  try {
+    // 모든 스토어 초기화
+    StoreProfileStore.reset();
+    ProductStore.reset();
+    FeedStore.reset();
+    CommentStore.reset();
+    FeaturedProductStore.reset();
+    
+    console.log("[MOCK RESET] All stores have been reset at", new Date().toISOString());
+    
+    return res.status(200).json({
+      success: true,
+      message: "All mock data has been reset successfully.",
+      resetAt: new Date().toISOString(),
+      stores: [
+        "StoreProfileStore",
+        "ProductStore", 
+        "FeedStore",
+        "CommentStore",
+        "FeaturedProductStore"
+      ]
+    });
+  } catch (error) {
+    console.error("[MOCK RESET ERROR]", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to reset mock data",
+      message: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+});
 
 // 🚨 글로벌 에러 핸들러 (라우터 등록 후 마지막에)
 app.use(
