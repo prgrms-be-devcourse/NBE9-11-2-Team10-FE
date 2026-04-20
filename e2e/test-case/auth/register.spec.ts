@@ -96,6 +96,9 @@ test.describe('회원가입 폼 (RegisterForm)', () => {
     // 로딩 상태 거친 후 성공 메시지 확인
     await expectErrorMessageVisible(page, '사용 가능한 이메일입니다.');
     await expect(page.locator('button:has-text("확인됨")')).toBeVisible();
+
+    // ✅ disabled 대신 readonly 속성 확인
+    await expect(page.locator('input[name="email"]')).toHaveAttribute('readonly');
   });
 
   // ✅ 시나리오 7: 이메일 중복 체크 - 중복된 이메일
@@ -109,9 +112,12 @@ test.describe('회원가입 폼 (RegisterForm)', () => {
     // 에러 시 border-red-500 클래스 적용 확인
     await expect(page.locator('input[name="email"]')).toHaveClass(/border-red-500/);
 
+    // ✅ 실패 시 버튼은 다시 활성화되어 재확인 가능
     await expect(page.getByTestId('email-duplicate-check-btn')).toBeEnabled();
-
     await expect(page.getByTestId('email-duplicate-check-btn')).toHaveText('중복 확인');
+
+    // ✅ 실패 시 readonly 가 적용되지 않음
+    await expect(page.locator('input[name="email"]')).not.toHaveAttribute('readonly');
   });
 
   // ✅ 시나리오 8: 닉네임 중복 체크 - 사용 가능
@@ -122,7 +128,7 @@ test.describe('회원가입 폼 (RegisterForm)', () => {
 
     await expectErrorMessageVisible(page, '사용 가능한 닉네임입니다.');
     await expect(page.locator('button:has-text("확인됨")')).toBeVisible();
-    await expect(page.locator('input[name="nickname"]')).toBeDisabled();
+    await expect(page.locator('input[name="nickname"]')).toHaveAttribute('readonly');
   });
 
   // ✅ 시나리오 9: 닉네임 중복 체크 - 중복된 닉네임
@@ -133,6 +139,7 @@ test.describe('회원가입 폼 (RegisterForm)', () => {
 
     await expectErrorMessageVisible(page, '이미 사용 중인 닉네임입니다.');
     await expect(page.locator('input[name="nickname"]')).toHaveClass(/border-red-500/);
+    await expect(page.locator('input[name="nickname"]')).not.toHaveAttribute('readonly');
   });
   // ✅ 시나리오 10: 값 없이 중복 체크 버튼 클릭 시 안내 메시지
   test('값을 입력하지 않고 중복 체크 버튼을 클릭하면 안내 메시지가 표시된다', async ({ page }) => {
@@ -144,4 +151,57 @@ test.describe('회원가입 폼 (RegisterForm)', () => {
     await page.getByTestId('nickname-duplicate-check-btn').click();
     await expect(page.locator('text=값을 입력해 주세요.').nth(1)).toBeVisible();
   });
+
+  test('이메일 중복체크 후 다른 필드 오류가 발생해도 값이 유지되어야 함.', async ({ page }) => {
+    // 1. 이메일 입력 및 중복체크 성공
+    await page.fill('input[name="email"]', 'valid@example.com');
+    await page.getByTestId('email-duplicate-check-btn').click();
+    await expectErrorMessageVisible(page, '사용 가능한 이메일입니다.');
+    await expect(page.locator('button:has-text("확인됨")')).toBeVisible();
+
+    // 2. 다른 필드에 오류 유발하는 값 입력 (비밀번호 형식 위반)
+    await page.fill('input[name="password"]', 'short');
+    await page.fill('input[name="name"]', '테스트');
+    await page.fill('input[name="nickname"]', 'tester');
+    await page.fill('input[name="phoneNumber"]', '010-1111-2222');
+    await page.fill('input[name="roadAddress"]', '예시 주소');
+    await page.fill('input[name="detailAddress"]', '101호');
+
+    // 3. 폼 제출
+    await page.click('button[type="submit"]');
+
+    // 4. 비밀번호 오류 메시지 확인
+    await expectErrorMessageVisible(page, '특수문자를 포함해야 합니다.');
+
+    // 5. 이메일 값 유지 확인
+    await expect(page.locator('input[name="email"]')).toHaveValue('valid@example.com');
+
+    // 6. ✅ 이메일 필드가 편집 불가능 상태
+    await expect(page.locator('input[name="email"]')).toHaveAttribute('readonly');
+  });
+
+  test('닉네임 중복체크 후 다른 필드 오류가 발생해도 다시 입력 했을 때 값이 유지되어야 함.', async ({ page }) => {
+    await page.fill('input[name="email"]', 'test@example.com');
+    await page.fill('input[name="password"]', 'TestPass123#');
+    await page.fill('input[name="name"]', '테스트');
+
+    // 닉네임 중복체크 성공
+    await page.fill('input[name="nickname"]', 'ValidNick123');
+    await page.getByTestId('nickname-duplicate-check-btn').click();
+    await expectErrorMessageVisible(page, '사용 가능한 닉네임입니다.');
+
+    // 전화번호 오류 유발
+    await page.fill('input[name="phoneNumber"]', 'invalid-phone');
+    await page.fill('input[name="roadAddress"]', '예시 주소');
+    await page.fill('input[name="detailAddress"]', '101호');
+
+    await page.click('button[type="submit"]');
+    await expectErrorMessageVisible(page, '전화번호 형식이 올바르지 않습니다');
+
+    await expect(page.locator('input[name="nickname"]')).toHaveAttribute('readonly');;
+
+    // 수정 가능 확인
+    await expect(page.locator('input[name="nickname"]')).toHaveValue('ValidNick123');
+  });
+
 });
