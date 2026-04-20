@@ -156,8 +156,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
               type="email"
               data-testid="email-input"
               defaultValue={state.formData.email}
-              // ✅ disabled 조건: 중복체크 성공 시에만 비활성화
-              disabled={checkState.email.checked && checkState.email.available}
+              readOnly={checkState.email.checked && checkState.email.available}
               className={`flex-1 px-3 py-2.5 border rounded-lg text-sm ${state.errors.email || (checkState.email.message && !checkState.email.available)
                 ? 'border-red-500'
                 : 'border-gray-300'
@@ -236,7 +235,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
               type="text"
               data-testid="nickname-input"
               defaultValue={state.formData.nickname}
-              disabled={checkState.nickname.checked && checkState.nickname.available}
+              readOnly={checkState.nickname.checked && checkState.nickname.available}
               className={`flex-1 px-3 py-2.5 border rounded-lg text-sm ${state.errors.nickname || (checkState.nickname.message && !checkState.nickname.available)
                   ? 'border-red-500'
                   : 'border-gray-300'
