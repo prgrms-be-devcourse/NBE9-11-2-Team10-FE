@@ -1,33 +1,145 @@
 // e2e/mocks/auth.routes.ts
-import { Router } from 'express';
+import { Router, Request, Response as ExpressResponse, NextFunction } from 'express';
 import { MOCK_USERS } from '../lib/mock-user-data';
 import { createErrorResponse } from '../lib/mock-common-data';
+import { z } from 'zod';
 
 const router = Router();
 
+interface RegisterRequestBody {
+  email?: string;
+  password?: string;
+  name?: string;
+  nickname?: string;
+  phoneNumber?: string;
+  roadAddress?: string;
+  detailAddress?: string;
+  address?: string;  // 기존 코드 호환용
+  role?: 'BUYER' | 'SELLER';
+}
 
-// ✅ POST /register
-router.post('/register', (req, res) => {
-  const { email } = req.body;
+const validateRegisterRequest = (req: Request, res: ExpressResponse, next: NextFunction) => {
+  const body = req.body as RegisterRequestBody;
   
-  if (email === MOCK_USERS.DUPLICATE.email) {
+  const { email, password, name, nickname, phoneNumber, address, role } = body;
+  
+  const errors: Array<{ field: string; message: string }> = [];
+
+  // 이메일 검증
+  if (!email || typeof email !== 'string') {
+    errors.push({ field: 'email', message: '이메일은 필수입니다.' });
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.push({ field: 'email', message: '올바른 이메일 형식이 필요합니다.' });
+  }
+
+  // 비밀번호 검증 (Zod schema 와 동일)
+  if (!password || typeof password !== 'string') {
+    errors.push({ field: 'password', message: '비밀번호는 필수입니다.' });
+  } else {
+    if (password.length < 8) errors.push({ field: 'password', message: '비밀번호는 8자 이상 입력해 주세요.' });
+    if (password.length > 20) errors.push({ field: 'password', message: '비밀번호는 20자 이하여야 합니다.' });
+    if (!/[A-Za-z]/.test(password)) errors.push({ field: 'password', message: '영문을 포함해야 합니다.' });
+    if (!/\d/.test(password)) errors.push({ field: 'password', message: '숫자를 포함해야 합니다.' });
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      errors.push({ field: 'password', message: '특수문자를 포함해야 합니다.' });
+    }
+  }
+
+  // 이름 검증
+  if (!name || typeof name !== 'string') {
+    errors.push({ field: 'name', message: '이름은 필수입니다.' });
+  } else {
+    if (name.length < 2) errors.push({ field: 'name', message: '이름은 2자 이상 입력해 주세요.' });
+    if (name.length > 50) errors.push({ field: 'name', message: '이름은 50자 이하여야 합니다.' });
+  }
+
+  // 닉네임 검증
+  if (!nickname || typeof nickname !== 'string') {
+    errors.push({ field: 'nickname', message: '닉네임은 필수입니다.' });
+  } else {
+    if (nickname.length < 2) errors.push({ field: 'nickname', message: '닉네임은 2자 이상 입력해 주세요.' });
+    if (nickname.length > 20) errors.push({ field: 'nickname', message: '닉네임은 20자 이하여야 합니다.' });
+    if (!/^[a-zA-Z0-9가-힣_]+$/.test(nickname)) {
+      errors.push({ field: 'nickname', message: '영문/숫자/한글/_만 사용 가능합니다.' });
+    }
+  }
+
+  // 전화번호 검증
+  if (!phoneNumber || typeof phoneNumber !== 'string') {
+    errors.push({ field: 'phoneNumber', message: '전화번호는 필수입니다.' });
+  } else if (!/^01[016789]-\d{3,4}-\d{4}$/.test(phoneNumber)) {
+    errors.push({ field: 'phoneNumber', message: '전화번호 형식이 올바르지 않습니다. (010-0000-0000)' });
+  }
+
+  // 주소 검증
+  if (!address || typeof address !== 'string' || address.trim() === '') {
+    errors.push({ field: 'address', message: '주소는 필수입니다.' });
+  }
+
+  // 역할 검증
+  if (!role || !['BUYER', 'SELLER'].includes(role)) {
+    errors.push({ field: 'role', message: '올바른 회원 유형을 선택해 주세요.' });
+  }
+
+  // 검증 실패 시 에러 응답
+  if (errors.length > 0) {
+    return res.status(400).json({
+      success: false,
+      detail: '입력 정보를 확인해 주세요.',
+      errorCode: 'VALIDATION_FAILED',
+      validationErrors: errors,
+      status: 400,
+    });
+  }
+
+  next(); // 검증 통과 시 다음 핸들러로
+};
+
+// ✅ 중복 체크 전용 미들웨어 (별도 엔드포인트용)
+const checkDuplicate = (type: 'EMAIL' | 'NICKNAME', value: string): boolean => {
+  const targets = [
+    MOCK_USERS.DUPLICATE.email,
+    MOCK_USERS.DUPLICATE.nickname,
+    MOCK_USERS.BUYER.email,
+    MOCK_USERS.BUYER.nickname,
+    MOCK_USERS.SELLER.email,
+    MOCK_USERS.SELLER.nickname,
+  ];
+  return targets.includes(value);
+};
+
+// ✅ POST /register - 검증 미들웨어 적용
+router.post('/register', validateRegisterRequest, (req: Request, res: ExpressResponse) => {
+  const { email, nickname } = req.body;
+
+  // 1. 이메일 중복 체크
+  if (checkDuplicate('EMAIL', email)) {
     return res.status(409).json(
       createErrorResponse(409, 'USER_002', '이미 사용 중인 이메일입니다.', '/api/v1/auth/register')
     );
   }
 
-  return res.status(200).json({
+  // 2. 닉네임 중복 체크 (선택사항: 서버에서 닉네임도 중복 체크한다고 가정)
+  if (nickname && checkDuplicate('NICKNAME', nickname)) {
+    return res.status(409).json(
+      createErrorResponse(409, 'USER_003', '이미 사용 중인 닉네임입니다.', '/api/v1/auth/register')
+    );
+  }
+
+  // 3. 성공 응답
+  return res.status(201).json({
     success: true,
-    user: {
+    data: {
       id: Math.floor(Math.random() * 10000) + 1000,
       email,
+      nickname,
       createdAt: new Date().toISOString(),
     },
   });
 });
 
-// ✅ GET /check-duplicate
-router.get('/check-duplicate', (req, res) => {
+// ✅ GET /check-duplicate - 기존 로직 유지 + 닉네임 지원 강화
+router.get('/check-duplicate', (req: Request, res: ExpressResponse) => {
   const rawType = Array.isArray(req.query.type) ? req.query.type[0] : req.query.type;
   const rawValue = Array.isArray(req.query.value) ? req.query.value[0] : req.query.value;
 
@@ -50,7 +162,18 @@ router.get('/check-duplicate', (req, res) => {
   }
 
   const value = rawValue.trim();
-  const isDuplicate = value === MOCK_USERS.DUPLICATE.email || value === MOCK_USERS.DUPLICATE.nickname;
+
+  if (rawType === 'EMAIL') {
+    const emailSchema = z.email('올바른 이메일 형식이 필요합니다.');
+    
+    const parseResult = emailSchema.safeParse(value);
+    if (!parseResult.success) {
+      return res.status(400).json(
+        createErrorResponse(400, 'INVALID_FORMAT', parseResult.error.issues[0].message, '/api/v1/auth/check-duplicate')
+      );
+    }
+  }
+  const isDuplicate = checkDuplicate(rawType as 'EMAIL' | 'NICKNAME', value);
 
   res.json({ 
     success: true, 
