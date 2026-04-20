@@ -1,5 +1,3 @@
-"use server";
-
 import { fetchStoreProfile } from "@/lib/services/store.service";
 import { ApiError } from "@/utils/error/stores.error";
 import Image from "next/image";
@@ -8,7 +6,7 @@ interface Props {
   sellerId: string;
 }
 
-export async function FeedProfile({ sellerId }: Props) {
+export async function StoreProfile({ sellerId }: Props) {
   let profile;
 
   try {

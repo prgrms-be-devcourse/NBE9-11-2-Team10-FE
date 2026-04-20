@@ -2,8 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import { Comment } from "@/types/store";
-import { fetchCommentList } from "@/lib/services/store.service";
+import { Comment } from "@/types/feed.type";
+import { fetchCommentList } from "@/lib/services/feed.service";
 
 interface Props {
   comments: Comment[];

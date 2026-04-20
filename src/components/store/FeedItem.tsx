@@ -1,10 +1,10 @@
-// src/components/store/FeedItem.tsx
 "use client";
+// src/components/store/FeedItem.tsx
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
-import { Feed, Comment } from "@/types/store";
-import { fetchCommentList } from "@/lib/services/store.service";
+import { Feed, Comment } from "@/types/feed.type";
+import { fetchCommentList } from "@/lib/services/feed.service";
 import { CommentList } from "./CommentList";
 
 interface Props {

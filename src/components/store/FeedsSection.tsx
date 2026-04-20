@@ -1,5 +1,5 @@
 // src/components/store/FeedsSection.tsx
-import { fetchFeedList } from "@/lib/services/store.service";
+import { fetchFeedList } from "@/lib/services/feed.service";
 import { FeedItem } from "./FeedItem";
 import { ApiError } from "@/utils/error/stores.error";
 

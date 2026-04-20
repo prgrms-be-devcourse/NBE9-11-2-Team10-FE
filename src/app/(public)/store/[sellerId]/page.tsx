@@ -1,8 +1,8 @@
 // store/[sellerId]/page.tsx
 import { Suspense } from "react";
 import { FeedsSection } from "@/components/store/FeedsSection";
-import { FeedProfile } from "@/components/store/FeedProfile";
 import { FeaturedProductsSection } from "@/components/store/FeaturedProductsSection";
+import { StoreProfile } from "@/components/store/StoreProfile";
 
 interface PageProps {
   params: Promise<{ sellerId: string }>;
@@ -41,7 +41,7 @@ export default async function SellerProfilePage({ params }: PageProps) {
           {/* 사이드바 */}
           <div className="lg:col-span-1">
             <Suspense fallback={<SectionSkeleton />}>
-              <FeedProfile sellerId={sellerId} />
+              <StoreProfile sellerId={sellerId} />
             </Suspense>
           </div>
         </div>
