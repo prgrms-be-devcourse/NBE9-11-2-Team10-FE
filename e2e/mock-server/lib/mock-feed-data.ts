@@ -13,6 +13,7 @@ export interface Feed {
   likeCount: number;
   commentCount: number;
   createdAt: string; // ISO 8601
+  isNotice?: boolean;
 }
 
 export interface Comment {
@@ -174,6 +175,17 @@ export const FeedStore = {
   create: (
     data: Omit<Feed, "feedId" | "createdAt" | "likeCount" | "commentCount">,
   ): Feed => {
+    if (data.mediaUrls && data.mediaUrls.length > 10) {
+      throw new Error("MAX_MEDIA_LIMIT_EXCEEDED");
+    }
+    if (
+      !data.content ||
+      data.content.length < 1 ||
+      data.content.length > 2000
+    ) {
+      throw new Error("CONTENT_LENGTH_INVALID");
+    }
+
     const newFeed: Feed = {
       ...data,
       feedId: `feed-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
@@ -185,20 +197,67 @@ export const FeedStore = {
     return newFeed;
   },
 
-  // ❤️ 좋아요 토글 (테스트용)
-  toggleLike: (feedId: string, isLiked: boolean): Feed | null => {
+  // ✏️ 피드 수정
+  update: (
+    feedId: string,
+    data: Partial<
+      Omit<
+        Feed,
+        "feedId" | "sellerId" | "createdAt" | "likeCount" | "commentCount"
+      >
+    >,
+  ): Feed | null => {
     const feed = feeds.get(feedId);
     if (!feed) return null;
 
-    const updated = {
+    if (data.mediaUrls && data.mediaUrls.length > 10) {
+      throw new Error("MAX_MEDIA_LIMIT_EXCEEDED");
+    }
+    if (data.content !== undefined) {
+      if (data.content.length < 1 || data.content.length > 2000) {
+        throw new Error("CONTENT_LENGTH_INVALID");
+      }
+    }
+
+    const updated: Feed = {
       ...feed,
-      likeCount: isLiked ? feed.likeCount + 1 : Math.max(0, feed.likeCount - 1),
+      ...data,
+      mediaUrls: data.mediaUrls !== undefined ? data.mediaUrls : feed.mediaUrls,
+      isNotice: data.isNotice !== undefined ? data.isNotice : feed.isNotice,
     };
     feeds.set(feedId, updated);
     return updated;
   },
 
-  // 🔄 데이터 초기화
+  // ❤️ 좋아요 토글 (반환값 개선)
+  toggleLike: (feedId: string): { feed: Feed; isLiked: boolean } | null => {
+    const feed = feeds.get(feedId);
+    if (!feed) return null;
+
+    // Mock: 랜덤으로 이전 상태 시뮬레이션 후 토글
+    const wasLiked = Math.random() > 0.5;
+    const newLikeCount = wasLiked
+      ? Math.max(0, feed.likeCount - 1)
+      : feed.likeCount + 1;
+
+    const updated = { ...feed, likeCount: newLikeCount };
+    feeds.set(feedId, updated);
+
+    return { feed: updated, isLiked: !wasLiked };
+  },
+
+  // ❌ 피드 삭제 (신규)
+  delete: (feedId: string): boolean => {
+    return feeds.delete(feedId);
+  },
+
+  // 🔐 소유자 검증 헬퍼
+  isOwner: (feedId: string, sellerId: string): boolean => {
+    const feed = feeds.get(feedId);
+    return feed?.sellerId === sellerId;
+  },
+
+  // 🔄 데이터 초기화 - [기존 유지]
   reset: () => {
     initFeedData();
   },
@@ -215,7 +274,7 @@ export const CommentStore = {
     size: number,
     sort: "asc" | "desc" = "desc",
   ): { comments: Comment[]; total: number } => {
-    let result = Array.from(comments.values()).filter(
+    const result = Array.from(comments.values()).filter(
       (c) => c.feedId === feedId,
     );
 

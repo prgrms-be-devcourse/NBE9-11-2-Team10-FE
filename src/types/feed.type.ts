@@ -1,5 +1,5 @@
 // ============================================================================
-// 📦 피드 관련 타입
+// 📦 피드 관련 타입 (기존 유지 + 신규 추가)
 // ============================================================================
 
 export interface Feed {
@@ -10,13 +10,44 @@ export interface Feed {
   commentCount: number;
   isLiked: boolean;
   createdAt: string;
+  isNotice?: boolean;
 }
 
 export interface FeedListResponse {
   feeds: Feed[];
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalElements: number;
+  };
 }
+
+// 🔹 피드 생성/수정 요청 DTO
+export interface CreateFeedRequest {
+  content: string;
+  mediaUrls?: string[];
+  isNotice?: boolean;
+}
+
+export type UpdateFeedRequest = CreateFeedRequest;
+
+// 🔹 피드 생성 응답 DTO
+export interface CreateFeedResponse {
+  feedId: string;
+  content: string;
+  mediaUrls?: string[];
+  createdAt: string;
+  isNotice?: boolean;
+}
+
+// 🔹 피드 좋아요 토글 응답 DTO
+export interface FeedLikeToggleResponse {
+  isLiked: boolean;
+  likeCount: number;
+}
+
 // ============================================================================
-// 📦 댓글 관련 타입
+// 📦 댓글 관련 타입 (기존 유지)
 // ============================================================================
 
 export interface CommentWriter {

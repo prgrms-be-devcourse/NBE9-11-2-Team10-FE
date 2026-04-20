@@ -183,18 +183,494 @@ router.get("/:sellerId/featured-products", (req: Request, res: Response) => {
 });
 
 // ============================================================================
-// 🔹 [E2E 전용] POST /__reset - 데이터 초기화
+// 🔹 POST /me/feeds - 피드 생성 (판매자 본인만)
 // ============================================================================
-router.post("/__reset", (req: Request, res: Response) => {
-  FeedStore.reset();
-  CommentStore.reset();
-  FeaturedProductStore.reset();
+router.post("/me/feeds", mockAuthMiddleware, (req: Request, res: Response) => {
+  // ✅ 인증 사용자 확인
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const currentUser = (req as any).mockUser;
+  if (!currentUser) {
+    return res
+      .status(401)
+      .json(
+        createErrorResponse(
+          401,
+          "UNAUTHORIZED",
+          "로그인 후 이용 가능합니다.",
+          "/api/v1/stores/me/feeds",
+        ),
+      );
+  }
 
-  return res.status(200).json({
-    success: true,
-    message: "Feed/Comment/FeaturedProduct data has been reset.",
-    resetAt: new Date().toISOString(),
+  // ✅ 판매자 권한 확인
+  if (currentUser.role !== "SELLER") {
+    return res.status(403).json(
+      createErrorResponse(
+        403,
+        "FORBIDDEN_SELLER_ONLY",
+        "판매자 전용 기능입니다.",
+        "/api/v1/stores/me/feeds",
+        { storeApplyUrl: "/stores/apply" }, // ✅ extra 파라미터 활용
+      ),
+    );
+  }
+
+  // ✅ 요청 바디 파싱 및 검증
+  const { content, mediaUrls = [], isNotice = false } = req.body;
+
+  // 콘텐츠 검증 (1~2000자)
+  if (
+    !content ||
+    typeof content !== "string" ||
+    content.length < 1 ||
+    content.length > 2000
+  ) {
+    return res
+      .status(400)
+      .json(
+        createErrorResponse(
+          400,
+          "CONTENT_LENGTH_INVALID",
+          "피드 내용은 1자 이상 2000자 이하로 입력해야 합니다.",
+          "/api/v1/stores/me/feeds",
+        ),
+      );
+  }
+
+  // 미디어 URL 검증 (최대 10개)
+  if (!Array.isArray(mediaUrls) || mediaUrls.length > 10) {
+    return res
+      .status(400)
+      .json(
+        createErrorResponse(
+          400,
+          "MAX_MEDIA_LIMIT_EXCEEDED",
+          "이미지/영상은 최대 10개까지 업로드 가능합니다.",
+          "/api/v1/stores/me/feeds",
+        ),
+      );
+  }
+
+  // URL 형식 검증
+  const invalidUrl = mediaUrls.find((url: string) => {
+    try {
+      new URL(url);
+      return false;
+    } catch {
+      return true;
+    }
   });
+  if (invalidUrl) {
+    return res
+      .status(400)
+      .json(
+        createErrorResponse(
+          400,
+          "INVALID_URL_FORMAT",
+          "유효하지 않은 미디어 URL 형식입니다.",
+          "/api/v1/stores/me/feeds",
+        ),
+      );
+  }
+
+  // ✅ 피드 생성
+  try {
+    const newFeed = FeedStore.create({
+      sellerId: currentUser.id.toString(),
+      content,
+      mediaUrls,
+      isNotice,
+    } as any);
+
+    const response = {
+      feedId: newFeed.feedId,
+      content: newFeed.content,
+      mediaUrls: newFeed.mediaUrls,
+      createdAt: newFeed.createdAt,
+      isNotice: newFeed.isNotice,
+    };
+
+    return res.status(201).json(response);
+  } catch (error: unknown) {
+    // Store 레이어에서 던진 에러 처리
+    if (error instanceof Error) {
+      if (error.message === "MAX_MEDIA_LIMIT_EXCEEDED") {
+        return res
+          .status(400)
+          .json(
+            createErrorResponse(
+              400,
+              "MAX_MEDIA_LIMIT_EXCEEDED",
+              "이미지/영상은 최대 10개까지 업로드 가능합니다.",
+              "/api/v1/stores/me/feeds",
+            ),
+          );
+      }
+      if (error.message === "CONTENT_LENGTH_INVALID") {
+        return res
+          .status(400)
+          .json(
+            createErrorResponse(
+              400,
+              "CONTENT_LENGTH_INVALID",
+              "피드 내용은 1자 이상 2000자 이하로 입력해야 합니다.",
+              "/api/v1/stores/me/feeds",
+            ),
+          );
+      }
+    }
+    console.error("[POST /me/feeds] Error:", error);
+    return res
+      .status(500)
+      .json(
+        createErrorResponse(
+          500,
+          "INTERNAL_ERROR",
+          "서버 내부 오류가 발생했습니다.",
+          "/api/v1/stores/me/feeds",
+        ),
+      );
+  }
 });
+
+// ============================================================================
+// 🔹 PATCH /{sellerId}/feeds/{feedId} - 피드 수정
+// ============================================================================
+router.patch(
+  "/:sellerId/feeds/:feedId",
+  mockAuthMiddleware,
+  (req: Request, res: Response) => {
+    const currentUser = (req as any).mockUser;
+    if (!currentUser) {
+      return res
+        .status(401)
+        .json(
+          createErrorResponse(
+            401,
+            "UNAUTHORIZED",
+            "로그인 후 이용 가능합니다.",
+            `/api/v1/stores/${req.params.sellerId}/feeds/${req.params.feedId}`,
+          ),
+        );
+    }
+
+    if (currentUser.role !== "SELLER") {
+      return res
+        .status(403)
+        .json(
+          createErrorResponse(
+            403,
+            "FORBIDDEN_SELLER_ONLY",
+            "판매자 전용 기능입니다.",
+            `/api/v1/stores/${req.params.sellerId}/feeds/${req.params.feedId}`,
+          ),
+        );
+    }
+
+    const sellerId = Array.isArray(req.params.sellerId)
+      ? req.params.sellerId[0]
+      : req.params.sellerId;
+    const feedId = Array.isArray(req.params.feedId)
+      ? req.params.feedId[0]
+      : req.params.feedId;
+
+    // ✅ 타인 스토어 수정 시도 차단
+    if (currentUser.id.toString() !== sellerId) {
+      console.warn(
+        `[SECURITY] User ${currentUser.id} attempted to modify store ${sellerId}`,
+      );
+      return res
+        .status(403)
+        .json(
+          createErrorResponse(
+            403,
+            "RESOURCE_ACCESS_DENIED",
+            "접근 권한이 없습니다.",
+            `/api/v1/stores/${sellerId}/feeds/${feedId}`,
+          ),
+        );
+    }
+
+    const feed = FeedStore.findById(feedId);
+    if (!feed) {
+      return res
+        .status(404)
+        .json(
+          createErrorResponse(
+            404,
+            "FEED_NOT_FOUND",
+            "존재하지 않는 피드입니다.",
+            `/api/v1/stores/${sellerId}/feeds/${feedId}`,
+          ),
+        );
+    }
+
+    if (!FeedStore.isOwner(feedId, sellerId)) {
+      return res
+        .status(403)
+        .json(
+          createErrorResponse(
+            403,
+            "FEED_ACCESS_DENIED",
+            "본인의 피드만 수정할 수 있습니다.",
+            `/api/v1/stores/${sellerId}/feeds/${feedId}`,
+          ),
+        );
+    }
+
+    const { content, mediaUrls, isNotice } = req.body;
+
+    // 검증 로직 (생성과 동일)
+    if (content !== undefined) {
+      if (
+        typeof content !== "string" ||
+        content.length < 1 ||
+        content.length > 2000
+      ) {
+        return res
+          .status(400)
+          .json(
+            createErrorResponse(
+              400,
+              "CONTENT_LENGTH_INVALID",
+              "피드 내용은 1자 이상 2000자 이하로 입력해야 합니다.",
+              `/api/v1/stores/${sellerId}/feeds/${feedId}`,
+            ),
+          );
+      }
+    }
+
+    if (mediaUrls !== undefined) {
+      if (!Array.isArray(mediaUrls) || mediaUrls.length > 10) {
+        return res
+          .status(400)
+          .json(
+            createErrorResponse(
+              400,
+              "MAX_MEDIA_LIMIT_EXCEEDED",
+              "이미지/영상은 최대 10개까지 업로드 가능합니다.",
+              `/api/v1/stores/${sellerId}/feeds/${feedId}`,
+            ),
+          );
+      }
+    }
+
+    try {
+      const updatedFeed = FeedStore.update(feedId, {
+        ...(content !== undefined && { content }),
+        ...(mediaUrls !== undefined && { mediaUrls }),
+        ...(isNotice !== undefined && { isNotice }),
+      });
+
+      if (!updatedFeed) {
+        return res
+          .status(404)
+          .json(
+            createErrorResponse(
+              404,
+              "FEED_NOT_FOUND",
+              "존재하지 않는 피드입니다.",
+              `/api/v1/stores/${sellerId}/feeds/${feedId}`,
+            ),
+          );
+      }
+
+      return res.status(200).json({
+        feedId: updatedFeed.feedId,
+        content: updatedFeed.content,
+        mediaUrls: updatedFeed.mediaUrls,
+        createdAt: updatedFeed.createdAt,
+        isNotice: updatedFeed.isNotice,
+      });
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        error.message === "MAX_MEDIA_LIMIT_EXCEEDED"
+      ) {
+        return res
+          .status(400)
+          .json(
+            createErrorResponse(
+              400,
+              "MAX_MEDIA_LIMIT_EXCEEDED",
+              "이미지/영상은 최대 10개까지 업로드 가능합니다.",
+              `/api/v1/stores/${sellerId}/feeds/${feedId}`,
+            ),
+          );
+      }
+      console.error("[PATCH /feeds/:feedId] Error:", error);
+      return res
+        .status(500)
+        .json(
+          createErrorResponse(
+            500,
+            "INTERNAL_ERROR",
+            "서버 내부 오류가 발생했습니다.",
+            `/api/v1/stores/${sellerId}/feeds/${feedId}`,
+          ),
+        );
+    }
+  },
+);
+
+// ============================================================================
+// 🔹 DELETE /me/feeds/{feedId} - 피드 삭제
+// ============================================================================
+router.delete(
+  "/me/feeds/:feedId",
+  mockAuthMiddleware,
+  (req: Request, res: Response) => {
+    const currentUser = (req as any).mockUser;
+    if (!currentUser) {
+      return res
+        .status(401)
+        .json(
+          createErrorResponse(
+            401,
+            "UNAUTHORIZED",
+            "로그인 후 이용 가능합니다.",
+            `/api/v1/stores/me/feeds/${req.params.feedId}`,
+          ),
+        );
+    }
+
+    if (currentUser.role !== "SELLER") {
+      return res
+        .status(403)
+        .json(
+          createErrorResponse(
+            403,
+            "FORBIDDEN_SELLER_ONLY",
+            "판매자 전용 기능입니다.",
+            `/api/v1/stores/me/feeds/${req.params.feedId}`,
+          ),
+        );
+    }
+
+    const feedId = Array.isArray(req.params.feedId)
+      ? req.params.feedId[0]
+      : req.params.feedId;
+    const sellerId = currentUser.id.toString();
+
+    const feed = FeedStore.findById(feedId);
+    if (!feed) {
+      return res
+        .status(404)
+        .json(
+          createErrorResponse(
+            404,
+            "FEED_NOT_FOUND",
+            "존재하지 않는 피드입니다.",
+            `/api/v1/stores/me/feeds/${feedId}`,
+          ),
+        );
+    }
+
+    if (!FeedStore.isOwner(feedId, sellerId)) {
+      return res
+        .status(403)
+        .json(
+          createErrorResponse(
+            403,
+            "FEED_ACCESS_DENIED",
+            "본인의 피드만 삭제할 수 있습니다.",
+            `/api/v1/stores/me/feeds/${feedId}`,
+          ),
+        );
+    }
+
+    const deleted = FeedStore.delete(feedId);
+    if (!deleted) {
+      return res
+        .status(500)
+        .json(
+          createErrorResponse(
+            500,
+            "INTERNAL_ERROR",
+            "피드 삭제 중 오류가 발생했습니다.",
+            `/api/v1/stores/me/feeds/${feedId}`,
+          ),
+        );
+    }
+
+    return res.status(204).send(); // No Content
+  },
+);
+
+// ============================================================================
+// 🔹 POST /{sellerId}/feeds/{feedId}/like - 좋아요 토글
+// ============================================================================
+router.post(
+  "/:sellerId/feeds/:feedId/like",
+  mockAuthMiddleware,
+  (req: Request, res: Response) => {
+    const currentUser = (req as any).mockUser;
+    if (!currentUser) {
+      return res
+        .status(401)
+        .json(
+          createErrorResponse(
+            401,
+            "UNAUTHORIZED",
+            "로그인 후 이용 가능합니다.",
+            `/api/v1/stores/${req.params.sellerId}/feeds/${req.params.feedId}/like`,
+          ),
+        );
+    }
+
+    const sellerId = Array.isArray(req.params.sellerId)
+      ? req.params.sellerId[0]
+      : req.params.sellerId;
+    const feedId = Array.isArray(req.params.feedId)
+      ? req.params.feedId[0]
+      : req.params.feedId;
+
+    const feed = FeedStore.findById(feedId);
+    if (!feed) {
+      return res
+        .status(404)
+        .json(
+          createErrorResponse(
+            404,
+            "FEED_NOT_FOUND",
+            "존재하지 않는 피드입니다.",
+            `/api/v1/stores/${sellerId}/feeds/${feedId}/like`,
+          ),
+        );
+    }
+
+    if (feed.sellerId !== sellerId) {
+      return res
+        .status(403)
+        .json(
+          createErrorResponse(
+            403,
+            "FEED_ACCESS_DENIED",
+            "접근할 수 없는 피드입니다.",
+            `/api/v1/stores/${sellerId}/feeds/${feedId}/like`,
+          ),
+        );
+    }
+
+    const result = FeedStore.toggleLike(feedId);
+    if (!result) {
+      return res
+        .status(500)
+        .json(
+          createErrorResponse(
+            500,
+            "INTERNAL_ERROR",
+            "좋아요 처리 중 오류가 발생했습니다.",
+            `/api/v1/stores/${sellerId}/feeds/${feedId}/like`,
+          ),
+        );
+    }
+
+    return res.status(200).json({
+      isLiked: result.isLiked,
+      likeCount: result.feed.likeCount,
+    });
+  },
+);
 
 export default router;
