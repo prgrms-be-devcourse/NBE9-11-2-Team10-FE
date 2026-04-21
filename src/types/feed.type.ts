@@ -56,7 +56,7 @@ export interface CommentWriter {
   profileImageUrl?: string;
 }
 
-export interface Comment {
+export interface CommentResponse {
   commentId: number;
   writer: CommentWriter;
   content: string;
@@ -74,6 +74,21 @@ export interface PaginationInfo {
 }
 
 export interface CommentListResponse {
-  comments: Comment[];
+  comments: CommentResponse[];
   pagination: PaginationInfo;
+}
+
+// ============================================================================
+// 📦 댓글 관련 타입 (신규 추가)
+// ============================================================================
+
+// 🔹 댓글 작성 요청 DTO
+export interface CreateCommentRequest {
+  content: string;
+}
+
+// 🔹 댓글 좋아요 토글 응답 DTO
+export interface CommentLikeToggleResponse {
+  isLiked: boolean;
+  likeCount: number;
 }

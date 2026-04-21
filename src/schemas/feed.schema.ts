@@ -44,3 +44,38 @@ export const feedLikeToggleSchema = z.object({
 });
 
 export type FeedLikeToggleInput = z.infer<typeof feedLikeToggleSchema>;
+
+// ============================================================================
+// 🔹 댓글 생성/관리 스키마 (신규)
+// ============================================================================
+
+// 1. 댓글 생성 요청 스키마
+export const createCommentSchema = z.object({
+  content: z
+    .string()
+    .min(1, "댓글 내용을 입력해주세요.")
+    .max(500, "댓글은 500자 이내로 작성 가능합니다.")
+    .refine((val) => val.trim().length > 0, {
+      message: "공백만 입력할 수 없습니다.",
+    }),
+});
+
+export type CreateCommentInput = z.infer<typeof createCommentSchema>;
+
+// 2. 댓글 삭제 요청 스키마 (Path 변수 검증용)
+export const deleteCommentSchema = z.object({
+  sellerId: z.string().min(1, "판매자 ID 가 필요합니다."),
+  feedId: z.string().min(1, "피드 ID 가 필요합니다."),
+  commentId: z.string().min(1, "댓글 ID 가 필요합니다."),
+});
+
+export type DeleteCommentInput = z.infer<typeof deleteCommentSchema>;
+
+// 3. 댓글 좋아요 토글 스키마
+export const commentLikeToggleSchema = z.object({
+  sellerId: z.string().min(1, "판매자 ID 가 필요합니다."),
+  feedId: z.string().min(1, "피드 ID 가 필요합니다."),
+  commentId: z.string().min(1, "댓글 ID 가 필요합니다."),
+});
+
+export type CommentLikeToggleInput = z.infer<typeof commentLikeToggleSchema>;

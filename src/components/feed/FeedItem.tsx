@@ -3,7 +3,7 @@
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
-import { Feed, Comment } from "@/types/feed.type";
+import { Feed, CommentResponse } from "@/types/feed.type";
 import { fetchCommentList } from "@/lib/services/feed.service";
 import { CommentList } from "../stores/CommentList";
 import { FeedActions } from "./FeedActions";
@@ -17,7 +17,7 @@ interface Props {
 
 export function FeedItem({ feed, sellerId, mockUserId, isMine }: Props) {
   // ✅ 댓글 관련 상태는 이 컴포넌트에서 관리
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<CommentResponse[]>([]);
   const [isCommentsLoaded, setIsCommentsLoaded] = useState(false);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [showComments, setShowComments] = useState(false);

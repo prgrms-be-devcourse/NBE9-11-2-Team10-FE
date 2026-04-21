@@ -1,19 +1,23 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import {
   createFeed,
   updateFeed,
   deleteFeed,
   toggleFeedLike,
+  createComment,
+  deleteComment,
+  toggleCommentLike,
 } from "@/lib/services/feed.service";
 import {
   CreateFeedInput,
   UpdateFeedInput,
   FeedLikeToggleInput,
+  CreateCommentInput,
+  CommentLikeToggleInput,
 } from "@/schemas/feed.schema";
-import { CreateFeedResponse, FeedLikeToggleResponse } from "@/types/feed.type";
+import { CommentLikeToggleResponse, CommentResponse, CreateFeedResponse, FeedLikeToggleResponse } from "@/types/feed.type";
 import { ApiError } from "@/utils/error/stores.error";
 
 // ============================================================================
@@ -117,6 +121,83 @@ export async function toggleFeedLikeAction(
       return { success: false, error: error.message };
     }
     console.error("[toggleFeedLikeAction] Unexpected error:", error);
+    return { success: false, error: "좋아요 처리 중 오류가 발생했습니다." };
+  }
+}
+
+// ============================================================================
+// 🔹 액션: 댓글 생성
+// ============================================================================
+
+export async function createCommentAction(
+  sellerId: string,
+  feedId: string,
+  input: CreateCommentInput,
+): Promise<{ success: boolean; data?: CommentResponse; error?: string }> {
+  try {
+    const result = await createComment(sellerId, feedId, input);
+    
+    // 댓글 목록 캐시 무효화
+    revalidatePath(`/stores/${sellerId}/feeds/${feedId}`);
+    
+    return { success: true, data: result };
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return { success: false, error: error.message };
+    }
+    console.error("[createCommentAction] Unexpected error:", error);
+    return { success: false, error: "댓글 작성 중 오류가 발생했습니다." };
+  }
+}
+
+// ============================================================================
+// 🔹 액션: 댓글 삭제
+// ============================================================================
+
+export async function deleteCommentAction(
+  sellerId: string,
+  feedId: string,
+  commentId: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await deleteComment(sellerId, feedId, commentId);
+    
+    // 댓글 목록 캐시 무효화
+    revalidatePath(`/stores/${sellerId}/feeds/${feedId}`);
+    
+    return { success: true };
+  } catch (error) {
+    if (error instanceof ApiError) {
+      // 권한 오류 (403) 등 명확한 메시지 전달
+      return { success: false, error: error.message };
+    }
+    console.error("[deleteCommentAction] Unexpected error:", error);
+    return { success: false, error: "댓글 삭제 중 오류가 발생했습니다." };
+  }
+}
+
+// ============================================================================
+// 🔹 액션: 댓글 좋아요 토글
+// ============================================================================
+
+export async function toggleCommentLikeAction(
+  input: CommentLikeToggleInput,
+): Promise<{ success: boolean; data?: CommentLikeToggleResponse; error?: string }> {
+  try {
+    const result = await toggleCommentLike(input);
+    
+    // 해당 피드 페이지 캐시 무효화 (좋아요 카운트 반영)
+    revalidatePath(`/stores/${input.sellerId}/feeds/${input.feedId}`);
+    
+    return { success: true, data: result };
+  } catch (error) {
+    if (error instanceof ApiError) {
+      if (error.status === 401) {
+        return { success: false, error: "로그인 후 이용 가능합니다." };
+      }
+      return { success: false, error: error.message };
+    }
+    console.error("[toggleCommentLikeAction] Unexpected error:", error);
     return { success: false, error: "좋아요 처리 중 오류가 발생했습니다." };
   }
 }

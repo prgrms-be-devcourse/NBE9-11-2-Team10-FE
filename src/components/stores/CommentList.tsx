@@ -2,15 +2,15 @@
 "use client";
 
 import { useState } from "react";
-import { Comment } from "@/types/feed.type";
+import { CommentResponse } from "@/types/feed.type";
 import { fetchCommentList } from "@/lib/services/feed.service";
 
 interface Props {
-  comments: Comment[];
+  comments: CommentResponse[];
   sellerId: string;
   feedId: string;
   mockUserId?: string;
-  onLoadMore?: (comments: Comment[]) => void;
+  onLoadMore?: (comments: CommentResponse[]) => void;
 }
 
 export function CommentList({

@@ -32,6 +32,7 @@ export interface Comment {
 // ============================================================================
 const feeds: Map<string, Feed> = new Map();
 const comments: Map<number, Comment> = new Map();
+const commentLikes: Map<string, Set<string>> = new Map();
 
 let nextCommentId = 1;
 
@@ -98,7 +99,7 @@ export const initFeedData = () => {
       feedId,
       writerId,
       writerNickname: nickname,
-      writerProfileImageUrl: "https://example.com/avatars/default.png",
+      writerProfileImageUrl: "https://example.com/images/avatars/default.png",
       content,
       likeCount: Math.floor(Math.random() * 10),
       createdAt: now,
@@ -258,6 +259,11 @@ export const CommentStore = {
     return { comments: paginated, total };
   },
 
+  // 🔍 댓글 단일 조회 (신규)
+  findById: (commentId: number): Comment | undefined => {
+    return comments.get(commentId);
+  },
+
   // ➕ 댓글 생성
   create: (
     data: Omit<Comment, "commentId" | "createdAt" | "updatedAt" | "likeCount">,
@@ -270,6 +276,13 @@ export const CommentStore = {
       createdAt: now,
       updatedAt: now,
     };
+
+    // 피드의 댓글 카운트 증가
+    const feed = feeds.get(data.feedId);
+    if (feed) {
+      feeds.set(data.feedId, { ...feed, commentCount: feed.commentCount + 1 });
+    }
+
     comments.set(newComment.commentId, newComment);
     return newComment;
   },
@@ -290,22 +303,63 @@ export const CommentStore = {
 
   // ❌ 댓글 삭제
   delete: (commentId: number): boolean => {
-    return comments.delete(commentId);
+    const comment = comments.get(commentId);
+    if (comment) {
+      // 피드의 댓글 카운트 감소
+      const feed = feeds.get(comment.feedId);
+      if (feed) {
+        feeds.set(comment.feedId, { 
+          ...feed, 
+          commentCount: Math.max(0, feed.commentCount - 1) 
+        });
+      }
+      return comments.delete(commentId);
+    }
+    return false;
   },
 
   // ❤️ 댓글 좋아요 토글
-  toggleLike: (commentId: number, isLiked: boolean): Comment | null => {
+  toggleLike: ({ commentId, userId, feedId }: { commentId: number; userId: string; feedId: string }): { comment: Comment; isLiked: boolean } | null => {
     const comment = comments.get(commentId);
     if (!comment) return null;
 
-    const updated = {
-      ...comment,
-      likeCount: isLiked
-        ? comment.likeCount + 1
-        : Math.max(0, comment.likeCount - 1),
+    const likeKey = `${feedId}_${commentId}`;
+    let userLikes = commentLikes.get(likeKey);
+
+    if (!userLikes) {
+      userLikes = new Set<string>();
+      commentLikes.set(likeKey, userLikes);
+    }
+
+    const isCurrentlyLiked = userLikes.has(userId);
+    
+    // 토글 로직
+    if (isCurrentlyLiked) {
+      userLikes.delete(userId); // 좋아요 취소
+      comment.likeCount = Math.max(0, comment.likeCount - 1);
+    } else {
+      userLikes.add(userId); // 좋아요 추가
+      comment.likeCount += 1;
+    }
+
+    comments.set(commentId, comment); // 변경사항 저장
+
+    return { 
+      comment, 
+      isLiked: !isCurrentlyLiked // 변경된 상태 반환
     };
-    comments.set(commentId, updated);
-    return updated;
+  },
+
+  // 🔍 특정 사용자의 좋아요 상태 조회 (댓글 목록 조회 시 사용)
+  isLikedByUser: (commentId: number, userId: string, feedId: string): boolean => {
+    const likeKey = `${feedId}_${commentId}`;
+    const userLikes = commentLikes.get(likeKey);
+    return userLikes ? userLikes.has(userId) : false;
+  },
+
+  isWriter: (commentId: number, userId: string): boolean => {
+    const comment = comments.get(commentId);
+    return comment?.writerId === userId;
   },
 
   // 🔄 데이터 초기화

@@ -7,6 +7,29 @@ import {
   CommentStore,
 } from "../lib/mock-feed-data";
 import { MOCK_USERS } from "../lib/mock-user-data";
+import { z } from "zod";
+
+// 🔹 댓글 생성 요청 스키마
+export const createCommentSchema = z.object({
+  content: z
+    .string()
+    .min(1, "댓글 내용을 입력해주세요.")
+    .max(500, "댓글은 500자 이내로 작성 가능합니다.")
+    .refine((val) => val.trim().length > 0, {
+      message: "공백만 입력할 수 없습니다.",
+    }),
+  // 🔥 대댓글 미지원으로 인해 스키마에서 제외
+});
+
+// 🔹 피드/댓글 좋아요 토글 파라미터 검증 (Path 변수용)
+// body 가 없으므로 파라미터만 검증
+export const likeToggleParamSchema = z.object({
+  sellerId: z.string().min(1),
+  feedId: z.string().min(1),
+  commentId: z.string().refine((val) => !isNaN(Number(val)), {
+    message: "commentId 는 숫자여야 합니다.",
+  }),
+});
 
 export const router = Router();
 
@@ -120,7 +143,9 @@ router.get(
       },
       content: comment.content,
       likeCount: comment.likeCount,
-      isLiked: req.headers["x-mock-comment-liked"] === "true",
+      isLiked: currentUser
+        ? CommentStore.isLikedByUser(comment.commentId, currentUser.id.toString(), feedId)
+        : false,
       isMine: currentUserId === comment.writerId,
       createdAt: comment.createdAt,
       updatedAt: comment.updatedAt,
@@ -628,6 +653,200 @@ router.post(
       likeCount: result.feed.likeCount,
     });
   },
+);
+
+// ============================================================================
+// 🔹 POST /{sellerId}/feeds/{feedId}/comments - 댓글 생성
+// ============================================================================
+router.post(
+  "/:sellerId/feeds/:feedId/comments",
+  mockAuthMiddleware,
+  (req: Request, res: Response) => {
+    // ✅ 인증 사용자 확인
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const currentUser = (req as any).mockUser;
+    if (!currentUser) {
+      return res.status(401).json(
+        createErrorResponse(401, "UNAUTHORIZED", "로그인 후 이용 가능합니다.", req.path)
+      );
+    }
+
+    const rawSellerId = req.params.sellerId;
+    const rawFeedId = req.params.feedId;
+    const sellerId = Array.isArray(rawSellerId) ? rawSellerId[0] : rawSellerId;
+    const feedId = Array.isArray(rawFeedId) ? rawFeedId[0] : rawFeedId;
+
+    // ✅ 피드 존재 여부 확인
+    const feed = FeedStore.findById(feedId);
+    if (!feed || feed.sellerId !== sellerId) {
+      return res.status(404).json(
+        createErrorResponse(404, "FEED_NOT_FOUND", "존재하지 않는 피드입니다.", req.path)
+      );
+    }
+
+    // ✅ 2. Zod 를 이용한 요청 바디 검증
+    const parseResult = createCommentSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json(
+        createErrorResponse(
+          400,
+          "INVALID_COMMENT_CONTENT",
+          parseResult.error.issues[0]?.message || "댓글 형식이 올바르지 않습니다.",
+          req.path
+        )
+      );
+    }
+    const { content } = parseResult.data;
+
+    // ✅ 댓글 생성 (대댓글 미지원: parentCommentId 무시)
+    try {
+      const newComment = CommentStore.create({
+        feedId,
+        writerId: currentUser.id.toString(),
+        writerNickname: currentUser.nickname,
+        writerProfileImageUrl: currentUser.profileImageUrl,
+        content: content.trim(),
+      });
+
+      // ✅ 응답 DTO 매핑 (명세서 준수)
+      const response = {
+        commentId: newComment.commentId,
+        writer: {
+          userId: newComment.writerId,
+          nickname: newComment.writerNickname,
+          profileImageUrl: newComment.writerProfileImageUrl,
+        },
+        content: newComment.content,
+        likeCount: newComment.likeCount,
+        isLiked: false, // 신규 댓글이므로 기본 false
+        isMine: true,   // 작성자 본인
+        createdAt: newComment.createdAt,
+        updatedAt: newComment.updatedAt,
+      };
+
+      return res.status(201).json(response);
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message === "INVALID_COMMENT_CONTENT") {
+        return res.status(400).json(
+          createErrorResponse(400, "INVALID_COMMENT_CONTENT", "댓글 내용이 올바르지 않습니다.", req.path)
+        );
+      }
+      console.error("[POST comments] Error:", error);
+      return res.status(500).json(
+        createErrorResponse(500, "INTERNAL_ERROR", "서버 내부 오류가 발생했습니다.", req.path)
+      );
+    }
+  }
+);
+
+// ============================================================================
+// 🔹 DELETE /{sellerId}/feeds/{feedId}/comments/{commentId} - 댓글 삭제
+// ============================================================================
+router.delete(
+  "/:sellerId/feeds/:feedId/comments/:commentId",
+  mockAuthMiddleware,
+  (req: Request, res: Response) => {
+    const currentUser = (req as any).mockUser;
+    if (!currentUser) {
+      return res.status(401).json(
+        createErrorResponse(401, "UNAUTHORIZED", "로그인 후 이용 가능합니다.", req.path)
+      );
+    }
+
+    const { sellerId, feedId, commentId } = req.params;
+    const sId = Array.isArray(sellerId) ? sellerId[0] : sellerId;
+    const fId = Array.isArray(feedId) ? feedId[0] : feedId;
+    const cId = Array.isArray(commentId) ? Number(commentId[0]) : Number(commentId);
+
+    // ✅ 댓글 존재 여부 확인
+    const comment = CommentStore.findById(cId);
+    if (!comment || comment.feedId !== fId) {
+      return res.status(404).json(
+        createErrorResponse(404, "COMMENT_NOT_FOUND", "존재하지 않는 댓글입니다.", req.path)
+      );
+    }
+
+    // ✅ 권한 검사: 작성자 본인 또는 피드 소유자(판매자)
+    const isWriter = comment.writerId === currentUser.id.toString();
+    const isFeedOwner = FeedStore.isOwner(fId, sId) && currentUser.id.toString() === sId;
+
+    if (!isWriter && !isFeedOwner) {
+      return res.status(403).json(
+        createErrorResponse(
+          403,
+          "COMMENT_ACCESS_DENIED",
+          "본인의 댓글만 삭제할 수 있습니다.",
+          req.path
+        )
+      );
+    }
+
+    // ✅ 삭제 수행
+    const deleted = CommentStore.delete(cId);
+    if (!deleted) {
+      return res.status(500).json(
+        createErrorResponse(500, "INTERNAL_ERROR", "댓글 삭제 중 오류가 발생했습니다.", req.path)
+      );
+    }
+
+    return res.status(204).send(); // No Content
+  }
+);
+
+// ============================================================================
+// 🔹 POST /{sellerId}/feeds/{feedId}/comments/{commentId}/like - 좋아요 토글
+// ============================================================================
+router.post(
+  "/:sellerId/feeds/:feedId/comments/:commentId/like",
+  mockAuthMiddleware,
+  (req: Request, res: Response) => {
+    const currentUser = (req as any).mockUser;
+    if (!currentUser) {
+      return res.status(401).json(
+        createErrorResponse(401, "UNAUTHORIZED", "로그인 후 이용 가능합니다.", req.path)
+      );
+    }
+
+    const { sellerId, feedId, commentId } = req.params;
+    const sId = Array.isArray(sellerId) ? sellerId[0] : sellerId;
+    const fId = Array.isArray(feedId) ? feedId[0] : feedId;
+    const cId = Array.isArray(commentId) ? Number(commentId[0]) : Number(commentId);
+
+    if (isNaN(cId)) {
+      return res.status(400).json(createErrorResponse(400, "INVALID_PARAMETER", "잘못된 댓글 ID 형식입니다.", req.path));
+    }
+
+    // ✅ 1. 피드 존재 여부 확인
+    const feed = FeedStore.findById(fId);
+    if (!feed || feed.sellerId !== sId) {
+      return res.status(404).json(createErrorResponse(404, "FEED_NOT_FOUND", "존재하지 않는 피드입니다.", req.path));
+    }
+
+    // ✅ 2. 댓글 존재 여부 확인
+    const comment = CommentStore.findById(cId);
+    if (!comment || comment.feedId !== fId) {
+      return res.status(404).json(createErrorResponse(404, "COMMENT_NOT_FOUND", "존재하지 않는 댓글입니다.", req.path));
+    }
+
+    // ✅ 3. 좋아요 토글 수행 (수정된 시그니처 적용)
+    // 인자: { commentId: number, userId: string, feedId: string }
+    const result = CommentStore.toggleLike({
+      commentId: cId,
+      userId: currentUser.id.toString(), // 🔥 현재 사용자 전달
+      feedId: fId,
+    });
+
+    if (!result) {
+      return res.status(500).json(createErrorResponse(500, "INTERNAL_ERROR", "좋아요 처리 중 오류가 발생했습니다.", req.path));
+    }
+
+    // ✅ 4. 응답 (명세서 준수)
+    // result 는 { comment: Comment, isLiked: boolean } 구조를 반환함
+    return res.status(200).json({
+      isLiked: result.isLiked,      // 🔥 변경된 좋아요 상태
+      likeCount: result.comment.likeCount, // 🔥 업데이트된 카운트
+    });
+  }
 );
 
 export default router;

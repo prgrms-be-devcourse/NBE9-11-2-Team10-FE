@@ -1,10 +1,15 @@
 "use server";
 // src/lib/services/store.service.ts
 import {
+  CommentLikeToggleInput,
+  commentLikeToggleSchema,
   CommentListQuery,
   commentListQuerySchema,
+  CreateCommentInput,
+  createCommentSchema,
   CreateFeedInput,
   createFeedSchema,
+  deleteCommentSchema,
   FeedLikeToggleInput,
   feedLikeToggleSchema,
   UpdateFeedInput,
@@ -16,6 +21,9 @@ import {
   FeedLikeToggleResponse,
   CreateFeedRequest,
   CreateFeedResponse,
+  CommentLikeToggleResponse,
+  CreateCommentRequest,
+  CommentResponse,
 } from "@/types/feed.type";
 import { ApiError, ValidationError } from "@/utils/error/stores.error";
 import { getForwardedHeaders, handleApiError } from "@/utils/helper";
@@ -294,4 +302,149 @@ export async function toggleFeedLike(
   }
 
   return response.json() as Promise<FeedLikeToggleResponse>;
+}
+
+// ============================================================================
+// 🔹 POST /api/v1/stores/{sellerId}/feeds/{feedId}/comments - 댓글 생성
+// ============================================================================
+
+export async function createComment(
+  sellerId: string,
+  feedId: string,
+  input: CreateCommentInput,
+  mockUserId?: string,
+): Promise<CommentResponse> {
+  // 1. 스키마 검증
+  const validated = createCommentSchema.safeParse(input);
+  if (!validated.success) {
+    throw new ValidationError(
+      validated.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      })),
+    );
+  }
+
+  // 2. 요청 데이터 구성
+  const body: CreateCommentRequest = {
+    content: validated.data.content
+  };
+
+  const headers = await getForwardedHeaders(
+    mockUserId && process.env.NODE_ENV === "test"
+      ? { "X-Mock-User-Id": mockUserId, "X-E2E-User-Id": mockUserId }
+      : undefined,
+  );
+
+  // 3. API 호출
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/stores/${sellerId}/feeds/${feedId}/comments`,
+    {
+      method: "POST",
+      headers: {
+        ...headers,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const error = await handleApiError(response);
+    throw ApiError.fromProblemDetail(error);
+  }
+
+  return response.json() as Promise<CommentResponse>;
+}
+
+// ============================================================================
+// 🔹 DELETE /api/v1/stores/{sellerId}/feeds/{feedId}/comments/{commentId} - 댓글 삭제
+// ============================================================================
+
+export async function deleteComment(
+  sellerId: string,
+  feedId: string,
+  commentId: string,
+  mockUserId?: string,
+): Promise<void> {
+  // Path 변수 기본 검증
+  if (!sellerId || !feedId || !commentId) {
+    throw new Error("유효한 ID 들이 필요합니다.");
+  }
+
+  // 상세 스키마 검증 (필요시)
+  const validated = deleteCommentSchema.safeParse({ sellerId, feedId, commentId });
+  if (!validated.success) {
+    throw new ValidationError(
+      validated.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      })),
+    );
+  }
+
+  const headers = await getForwardedHeaders(
+    mockUserId && process.env.NODE_ENV === "test"
+      ? { "X-Mock-User-Id": mockUserId, "X-E2E-User-Id": mockUserId }
+      : undefined,
+  );
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/stores/${sellerId}/feeds/${feedId}/comments/${commentId}`,
+    {
+      method: "DELETE",
+      headers,
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const error = await handleApiError(response);
+    throw ApiError.fromProblemDetail(error);
+  }
+}
+
+// ============================================================================
+// 🔹 POST /api/v1/stores/{sellerId}/feeds/{feedId}/comments/{commentId}/like - 좋아요 토글
+// ============================================================================
+
+export async function toggleCommentLike(
+  input: CommentLikeToggleInput,
+  mockUserId?: string,
+): Promise<CommentLikeToggleResponse> {
+  // 1. 스키마 검증
+  const validated = commentLikeToggleSchema.safeParse(input);
+  if (!validated.success) {
+    throw new ValidationError(
+      validated.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      })),
+    );
+  }
+
+  const { sellerId, feedId, commentId } = validated.data;
+
+  const headers = await getForwardedHeaders(
+    mockUserId && process.env.NODE_ENV === "test"
+      ? { "X-Mock-User-Id": mockUserId, "X-E2E-User-Id": mockUserId }
+      : undefined,
+  );
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/stores/${sellerId}/feeds/${feedId}/comments/${commentId}/like`,
+    {
+      method: "POST",
+      headers,
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const error = await handleApiError(response);
+    throw ApiError.fromProblemDetail(error);
+  }
+
+  return response.json() as Promise<CommentLikeToggleResponse>;
 }
