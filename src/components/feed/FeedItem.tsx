@@ -5,17 +5,16 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import { Feed, CommentResponse } from "@/types/feed.type";
 import { fetchCommentList } from "@/lib/services/feed.service";
-import { CommentList } from "../stores/CommentList";
+import { CommentList } from "./FeedCommentList";
 import { FeedActions } from "./FeedActions";
 
 interface Props {
   feed: Feed;
   sellerId: string;
-  mockUserId?: string;
   isMine?: boolean;
 }
 
-export function FeedItem({ feed, sellerId, mockUserId, isMine }: Props) {
+export function FeedItem({ feed, sellerId, isMine }: Props) {
   // ✅ 댓글 관련 상태는 이 컴포넌트에서 관리
   const [comments, setComments] = useState<CommentResponse[]>([]);
   const [isCommentsLoaded, setIsCommentsLoaded] = useState(false);
@@ -36,7 +35,6 @@ export function FeedItem({ feed, sellerId, mockUserId, isMine }: Props) {
           size: 10,
           sort: "createdAt,desc",
         },
-        mockUserId,
       );
       setComments(response.comments);
       setIsCommentsLoaded(true);
@@ -46,7 +44,7 @@ export function FeedItem({ feed, sellerId, mockUserId, isMine }: Props) {
     } finally {
       setIsLoadingComments(false);
     }
-  }, [sellerId, feed.feedId, isCommentsLoaded, isLoadingComments, mockUserId]);
+  }, [sellerId, feed.feedId, isCommentsLoaded, isLoadingComments]);
 
   // ✅ 댓글 토글 핸들러
   const toggleComments = () => {
@@ -141,20 +139,10 @@ export function FeedItem({ feed, sellerId, mockUserId, isMine }: Props) {
               comments={comments}
               sellerId={sellerId}
               feedId={feed.feedId}
-              mockUserId={mockUserId}
               onLoadMore={(newComments) => {
                 setComments((prev) => [...prev, ...newComments]);
               }}
             />
-
-            {/* ToDo : ✅ 댓글 작성 폼 
-            <CommentForm
-              sellerId={sellerId}
-              feedId={feed.feedId}
-              mockUserId={mockUserId}
-              onCommentAdded={handleCommentAdded}
-            />
-            */}
           </div>
         )}
       </footer>

@@ -187,7 +187,7 @@ export async function toggleCommentLikeAction(
     const result = await toggleCommentLike(input);
     
     // 해당 피드 페이지 캐시 무효화 (좋아요 카운트 반영)
-    revalidatePath(`/stores/${input.sellerId}/feeds/${input.feedId}`);
+    revalidatePath(`/stores/${input.sellerId}`);
     
     return { success: true, data: result };
   } catch (error) {

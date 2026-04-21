@@ -4,12 +4,13 @@
 import { useState } from "react";
 import { CommentResponse } from "@/types/feed.type";
 import { fetchCommentList } from "@/lib/services/feed.service";
+import { CommentItem } from "./FeedCommentItem";
+import { CommentForm } from "./FeedCommentForm";
 
 interface Props {
   comments: CommentResponse[];
   sellerId: string;
   feedId: string;
-  mockUserId?: string;
   onLoadMore?: (comments: CommentResponse[]) => void;
 }
 
@@ -17,12 +18,31 @@ export function CommentList({
   comments,
   sellerId,
   feedId,
-  mockUserId,
   onLoadMore,
 }: Props) {
   const [page, setPage] = useState(1); // 0 은 이미 로드됨
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const [localComments, setLocalComments] = useState<CommentResponse[]>(comments);
+
+  // ✅ 새 댓글 추가 시 목록에 반영
+  const handleCommentAdded = (newComment: CommentResponse) => {
+    setLocalComments((prev) => [newComment, ...prev]);
+  };
+
+  // ✅ 댓글 삭제 시 목록에서 제거
+  const handleCommentDeleted = (commentId: number) => {
+    setLocalComments((prev) => prev.filter((c) => c.commentId !== commentId));
+  };
+
+  const handleCommentLiked = (commentId: number, newLikeCount: number, newIsLiked: boolean) => {
+    setLocalComments(prev => prev.map(c => 
+      c.commentId === commentId 
+        ? { ...c, likeCount: newLikeCount, isLiked: newIsLiked }
+        : c
+    ));
+  };
 
   const loadMore = async () => {
     if (!hasMore || isLoadingMore) return;
@@ -37,7 +57,6 @@ export function CommentList({
           size: 10,
           sort: "createdAt,desc",
         },
-        mockUserId,
       );
 
       if (response.comments.length > 0) {
@@ -56,19 +75,16 @@ export function CommentList({
   return (
     <div className="space-y-3">
       {/* 댓글 목록 */}
-      <ul className="space-y-2">
-        {comments.map((comment) => (
-          <li key={comment.commentId} className="text-sm">
-            <div className="flex items-start gap-2">
-              <span className="font-medium text-gray-700">
-                {comment.writer.userId}
-              </span>
-              <span className="text-gray-600 flex-1">{comment.content}</span>
-              <time className="text-xs text-gray-400">
-                {new Date(comment.createdAt).toLocaleDateString()}
-              </time>
-            </div>
-          </li>
+      <ul className="space-y-1" data-testid="comments-list">
+        {localComments.map((comment) => (
+          <CommentItem
+            key={comment.commentId}
+            comment={comment}
+            sellerId={sellerId}
+            feedId={feedId}
+            onCommentDeleted={handleCommentDeleted}
+            onCommentLiked={handleCommentLiked}
+          />
         ))}
       </ul>
 
@@ -82,6 +98,12 @@ export function CommentList({
           {isLoadingMore ? "로딩 중..." : "이전 댓글 보기"}
         </button>
       )}
+
+      <CommentForm
+        sellerId={sellerId}
+        feedId={feedId}
+        onCommentAdded={handleCommentAdded}
+      />
     </div>
   );
 }

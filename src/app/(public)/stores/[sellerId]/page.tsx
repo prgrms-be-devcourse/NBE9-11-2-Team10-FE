@@ -1,7 +1,7 @@
 // store/[sellerId]/page.tsx
 import { Suspense } from "react";
 import { FeedsSection } from "@/components/feed/FeedsSection";
-import { FeaturedProductsSection } from "@/components/feed/FeaturedProductsSection";
+import { FeaturedProductsSection } from "@/components/stores/FeaturedProductsSection";
 import { StoreProfile } from "@/components/stores/StoreProfile";
 
 interface PageProps {

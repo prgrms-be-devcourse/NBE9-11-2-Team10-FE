@@ -172,7 +172,9 @@ test.describe("🏪 판매자 스토어 프로필 페이지", () => {
     await storeHelpers.toggleComments(page, 0);
 
     // 댓글 목록 표시 확인
-    const commentList = feedItem.locator(".mt-4.pt-4.border-t");
+    const commentList = page.getByTestId(
+      `comments-list`,
+    );
     await expect(commentList).toBeVisible();
 
     // ✅ [수정] 첫 번째 댓글이 보이는지 + 전체 개수 검증

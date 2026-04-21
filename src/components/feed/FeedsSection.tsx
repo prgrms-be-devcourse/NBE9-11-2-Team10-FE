@@ -7,15 +7,14 @@ import { FeedItemList } from "./FeedItemList";
 
 interface Props {
   sellerId: string;
-  mockUserId?: string;
 }
 
-export async function FeedsSection({ sellerId, mockUserId }: Props) {
+export async function FeedsSection({ sellerId }: Props) {
   // ✅ 피드 목록만 서버에서 조회
   let feedList;
 
   try {
-    feedList = await fetchFeedList(sellerId, mockUserId);
+    feedList = await fetchFeedList(sellerId);
   } catch (error) {
     // 404 에러 처리
     if (error instanceof ApiError && error.status === 404) {
@@ -78,7 +77,6 @@ export async function FeedsSection({ sellerId, mockUserId }: Props) {
       <FeedItemList
         feeds={feedList.feeds}
         sellerId={sellerId}
-        mockUserId={mockUserId}
       />
     </section>
   );
