@@ -102,7 +102,7 @@ export async function handleUpdateProfile(
 
 
     // 5️⃣ ✅ 성공 시 리다이렉트
-    redirect(`/store/${result.sellerId}`);
+    redirect(`/stores/${result.sellerId}`);
 }
 
 // ============================================================================

@@ -27,7 +27,7 @@ export async function createFeedAction(
     const result = await createFeed(input);
 
     // 피드 목록 페이지 캐시 무효화
-    revalidatePath("/stores/[sellerId]/feeds");
+    revalidatePath("/stores/[sellerId]");
 
     return { success: true, data: result };
   } catch (error) {
@@ -51,8 +51,7 @@ export async function updateFeedAction(
   try {
     const result = await updateFeed(sellerId, feedId, input);
 
-    revalidatePath(`/stores/${sellerId}/feeds/${feedId}`);
-    revalidatePath(`/stores/${sellerId}/feeds`);
+    revalidatePath(`/stores/${sellerId}`);
 
     return { success: true, data: result };
   } catch (error) {

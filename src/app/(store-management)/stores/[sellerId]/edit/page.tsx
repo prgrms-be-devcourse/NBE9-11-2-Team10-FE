@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { fetchStoreProfile } from "@/lib/services/store.service";
 import { ApiError } from "@/utils/error/stores.error";
-import { ProfileEditForm } from "@/components/store/ProfileEditForm";
+import { ProfileEditForm } from "@/components/stores/ProfileEditForm";
 
 interface PageProps {
   params: Promise<{ sellerId: string }>;
@@ -54,7 +54,7 @@ export default async function ProfileEditPage({ params }: PageProps) {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-800">판매자 프로필 수정</h1>
           <Link
-            href={`/store/${sellerId}`}
+            href={`/stores/${sellerId}`}
             className="text-sm text-gray-600 hover:text-gray-900 border border-gray-300 px-3 py-1.5 rounded-md hover:bg-gray-50 transition"
           >
             ← 프로필 보기

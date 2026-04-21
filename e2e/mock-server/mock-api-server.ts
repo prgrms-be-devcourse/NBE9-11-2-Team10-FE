@@ -13,7 +13,8 @@ import storeFeedsRoutes from "./routes/store-feeds.routes";
 import debugRoutes from "./routes/debug.routes";
 import { StoreProfileStore } from "./lib/mock-store-profile-data";
 import { ProductStore } from "./lib/mock-product-data";
-import { CommentStore, FeaturedProductStore, FeedStore } from "./lib/mock-feed-data";
+import { CommentStore, FeedStore } from "./lib/mock-feed-data";
+import { FeaturedProductStore } from "./lib/mock-featured-product";
 
 const app = express();
 const PORT = process.env.MOCK_PORT || 4000;

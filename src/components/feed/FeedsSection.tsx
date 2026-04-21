@@ -1,7 +1,9 @@
-// src/components/store/FeedsSection.tsx
+// src/components/stores/FeedsSection.tsx
 import { fetchFeedList } from "@/lib/services/feed.service";
 import { FeedItem } from "./FeedItem";
 import { ApiError } from "@/utils/error/stores.error";
+import Link from "next/link";
+import { FeedItemList } from "./FeedItemList";
 
 interface Props {
   sellerId: string;
@@ -66,16 +68,18 @@ export async function FeedsSection({ sellerId, mockUserId }: Props) {
       >
         Activity
       </h2>
-      <div className="space-y-6" data-testid="feeds-list">
-        {feedList.feeds.map((feed) => (
-          <FeedItem
-            key={feed.feedId}
-            feed={feed}
-            sellerId={sellerId}
-            mockUserId={mockUserId}
-          />
-        ))}
-      </div>
+      <Link
+        href={`/stores/${sellerId}/feeds/new`}
+        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+        data-testid="create-feed-button"
+      >
+        + 피드 작성
+      </Link>
+      <FeedItemList
+        feeds={feedList.feeds}
+        sellerId={sellerId}
+        mockUserId={mockUserId}
+      />
     </section>
   );
 }

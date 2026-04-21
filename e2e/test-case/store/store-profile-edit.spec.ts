@@ -36,7 +36,7 @@ test.describe('✏️ 판매자 프로필 수정 페이지', () => {
 
     await storeEditHelpers.clickCancelButton(page);
 
-    await expect(page).toHaveURL(`/store/${SELLER_ID}`);
+    await expect(page).toHaveURL(`/stores/${SELLER_ID}`);
     await expect(
       page.getByRole('heading', { name: MOCK_STORE_PROFILE.nickname }),
     ).toBeVisible();
@@ -177,7 +177,7 @@ test.describe('✏️ 판매자 프로필 수정 페이지', () => {
     await storeEditHelpers.clickSaveButton(page);
 
     // 리다이렉트 검증
-    await expect(page).toHaveURL(`/store/${SELLER_ID}`);
+    await expect(page).toHaveURL(`/stores/${SELLER_ID}`);
 
     // 업데이트된 닉네임이 프로필에 반영되었는지 검증
     await expect(
@@ -200,7 +200,7 @@ test.describe('✏️ 판매자 프로필 수정 페이지', () => {
     });
     await storeEditHelpers.clickSaveButton(page);
 
-    await expect(page).toHaveURL(`/store/${SELLER_ID}`);
+    await expect(page).toHaveURL(`/stores/${SELLER_ID}`);
     await expect(page.getByTestId('profile-bio')).toHaveText(
       '업데이트된 소개 문구입니다.',
     );
@@ -220,7 +220,7 @@ test.describe('✏️ 판매자 프로필 수정 페이지', () => {
     await storeEditHelpers.fillProfileForm(page, { profileImageUrl: '' });
     await storeEditHelpers.clickSaveButton(page);
 
-    await expect(page).toHaveURL(`/store/${SELLER_ID}`);
+    await expect(page).toHaveURL(`/stores/${SELLER_ID}`);
     // 이미지가 초기화되어 이니셜 아바타가 표시되는지 검증
     await expect(
       page.getByTestId('profile-avatar').locator('span'),
@@ -245,7 +245,7 @@ test.describe('✏️ 판매자 프로필 수정 페이지', () => {
       '이미 사용 중인 닉네임입니다.',
     );
     // 페이지는 리다이렉트되지 않고 폼 상태 유지
-    await expect(page).toHaveURL(`/store/${SELLER_ID}/edit`);
+    await expect(page).toHaveURL(`/stores/${SELLER_ID}/edit`);
   });
 
   // ============================================================================

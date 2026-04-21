@@ -1,19 +1,21 @@
 "use client";
-// src/components/store/FeedItem.tsx
+// src/components/stores/FeedItem.tsx
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
 import { Feed, Comment } from "@/types/feed.type";
 import { fetchCommentList } from "@/lib/services/feed.service";
-import { CommentList } from "./CommentList";
+import { CommentList } from "../stores/CommentList";
+import { FeedActions } from "./FeedActions";
 
 interface Props {
   feed: Feed;
   sellerId: string;
   mockUserId?: string;
+  isMine?: boolean;
 }
 
-export function FeedItem({ feed, sellerId, mockUserId }: Props) {
+export function FeedItem({ feed, sellerId, mockUserId, isMine }: Props) {
   // ✅ 댓글 관련 상태는 이 컴포넌트에서 관리
   const [comments, setComments] = useState<Comment[]>([]);
   const [isCommentsLoaded, setIsCommentsLoaded] = useState(false);
@@ -64,16 +66,33 @@ export function FeedItem({ feed, sellerId, mockUserId }: Props) {
   return (
     <article className="bg-white rounded-lg p-4 shadow-sm">
       {/* 👇 피드 헤더 (작성자/시간) */}
-      <header className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-          {/* 프로필 이미지 */}
+      <header className="flex items-center justify-between gap-3 mb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+            {/* 프로필 이미지 */}
+          </div>
+          <div>
+            <p className="font-medium text-gray-800">판매자 닉네임</p>
+            <time className="text-xs text-gray-500">
+              {new Date(feed.createdAt).toLocaleDateString("ko-KR")}
+            </time>
+          </div>
         </div>
-        <div>
-          <p className="font-medium text-gray-800">판매자 닉네임</p>
-          <time className="text-xs text-gray-500">
-            {new Date(feed.createdAt).toLocaleDateString("ko-KR")}
-          </time>
-        </div>
+
+        {/* 👈 소유자일 경우 액션 버튼 표시 */}
+        <FeedActions
+          sellerId={sellerId}
+          feedId={feed.feedId}
+          isMine={isMine ?? false}
+          onEdit={() => {
+            // 수정 페이지로 이동 (Next.js App Router)
+            window.location.href = `/stores/${sellerId}/feeds/${feed.feedId}/edit`;
+          }}
+          onDelete={() => {
+            // 삭제 후 페이지 새로고침
+            window.location.reload();
+          }}
+        />
       </header>
 
       {/* 👇 피드 콘텐츠 */}

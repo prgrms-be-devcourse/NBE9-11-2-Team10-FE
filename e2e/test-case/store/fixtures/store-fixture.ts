@@ -2,9 +2,9 @@
 import { test as base, expect, Page } from "@playwright/test";
 import { MOCK_USERS, MockUser } from "@/../e2e/mock-server/lib/mock-user-data";
 import {
-  FeaturedProductStore,
   FeedStore,
 } from "../../../mock-server/lib/mock-feed-data";
+import { FeaturedProductStore } from "../../../mock-server/lib/mock-featured-product";
 
 // ============================================================================
 // 👤 Mock 사용자 (기존과 공유)
@@ -21,8 +21,8 @@ export const MOCK_BUYER = MOCK_USERS.BUYER;
 export const StoreProfileEditHelpers = {
   // 📍 수정 페이지 이동
   goToEditPage: async (page: Page, sellerId: string) => {
-    await page.goto(`/store/${sellerId}/edit`);
-    await expect(page).toHaveURL(`/store/${sellerId}/edit`);
+    await page.goto(`/stores/${sellerId}/edit`);
+    await expect(page).toHaveURL(`/stores/${sellerId}/edit`);
   },
 
   // 📍 폼 필드 입력
@@ -83,8 +83,8 @@ export const StoreProfileEditHelpers = {
   ) => {
     const field = page.locator(`#${fieldName.split('.').pop()}`);
     const errorText = field
-    .locator('xpath=../..//p[contains(@class, "text-red-500")]')
-    .filter({ hasText: expectedMessage });
+      .locator('xpath=../..//p[contains(@class, "text-red-500")]')
+      .filter({ hasText: expectedMessage });
     await expect(errorText).toBeVisible();
   },
 
@@ -162,6 +162,17 @@ export const test = base.extend<{
     toggleComments: (page: Page, feedIndex?: number) => Promise<void>;
     loadMoreComments: (page: Page) => Promise<void>;
     resetMockStoreData: () => Promise<void>;
+    goToCreateFeed: (sellerId: string) => Promise<void>;
+    goToEditFeed: (sellerId: string, feedId: string) => Promise<void>;
+    fillFeedForm: (options: {
+      content?: string;
+      mediaUrls?: string[];
+      isNotice?: boolean;
+    }) => Promise<void>;
+    submitFeedForm: () => Promise<void>;
+    assertFeedFormError: (message: string) => Promise<void>;
+    clickDeleteFeed: (feedIndex?: number) => Promise<void>;
+    assertFeedDeleted: (feedId: string) => Promise<void>;
   };
   loginAs: (user: MockUser) => Promise<void>;
   loginAsSeller: () => Promise<void>;
@@ -172,7 +183,7 @@ export const test = base.extend<{
     const helpers = {
       // 🔹 스토어 프로필 페이지 이동
       goToStoreProfile: async (sellerId: string) => {
-        await page.goto(`/store/${sellerId}`);
+        await page.goto(`/stores/${sellerId}`);
         await page.waitForLoadState("networkidle");
       },
 
@@ -323,6 +334,60 @@ export const test = base.extend<{
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/v1/__reset`,
         );
       },
+
+      goToCreateFeed: async (sellerId: string) => {
+        await page.goto(`/stores/${sellerId}/feeds/new`);
+        await expect(page.getByTestId("feed-form")).toBeVisible();
+      },
+
+      goToEditFeed: async (sellerId: string, feedId: string) => {
+        await page.goto(`/stores/${sellerId}/feeds/${feedId}/edit`);
+        await expect(page.getByTestId("feed-form")).toBeVisible();
+      },
+      fillFeedForm: async (options: {
+        content?: string
+        mediaUrls?: string[]
+        isNotice?: boolean
+      }) => {
+        const { content, mediaUrls, isNotice } = options;
+        if (content !== undefined) {
+          await page.getByTestId("content-input").fill(content);
+        }
+        if (isNotice !== undefined) {
+          const checkbox = page.getByTestId("notice-checkbox");
+          if (isNotice !== (await checkbox.isChecked())) {
+            await checkbox.click();
+          }
+        }
+        if (mediaUrls?.length) {
+          for (const url of mediaUrls) {
+            await page.getByPlaceholder("https://example.com/image.jpg").fill(url);
+            await page.getByRole("button", { name: "추가" }).click();
+          }
+        }
+      },
+
+      submitFeedForm: async () => {
+        await page.getByTestId("submit-button").click();
+      },
+
+      assertFeedFormError: async (message: string) => {
+        await expect(page.getByTestId("form-error")).toBeVisible();
+        await expect(page.getByTestId("form-error")).toContainText(message);
+      },
+
+      clickDeleteFeed: async (feedIndex = 0) => {
+        const feedItem = page.locator("article").nth(feedIndex);
+        page.once("dialog", (dialog) => dialog.accept());
+        await feedItem.getByTestId("feed-actions").getByLabel("삭제").click();
+      },
+
+      assertFeedDeleted: async (feedId: string) => {
+        // 피드 목록에서 해당 피드가 사라졌는지 확인
+        await expect(
+          page.locator("article").filter({ hasText: feedId })
+        ).not.toBeVisible();
+      },
     };
 
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -365,7 +430,7 @@ export const test = base.extend<{
       await loginAs(MOCK_BUYER);
     });
   },
-  storeEditHelpers: async ({}, use) => {
+  storeEditHelpers: async ({ }, use) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(StoreProfileEditHelpers);
   },

@@ -1,8 +1,8 @@
 // store/[sellerId]/page.tsx
 import { Suspense } from "react";
-import { FeedsSection } from "@/components/store/FeedsSection";
-import { FeaturedProductsSection } from "@/components/store/FeaturedProductsSection";
-import { StoreProfile } from "@/components/store/StoreProfile";
+import { FeedsSection } from "@/components/feed/FeedsSection";
+import { FeaturedProductsSection } from "@/components/feed/FeaturedProductsSection";
+import { StoreProfile } from "@/components/stores/StoreProfile";
 
 interface PageProps {
   params: Promise<{ sellerId: string }>;

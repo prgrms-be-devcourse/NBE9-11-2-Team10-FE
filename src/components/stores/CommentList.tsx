@@ -1,4 +1,4 @@
-// src/components/store/CommentList.tsx
+// src/components/stores/CommentList.tsx
 "use client";
 
 import { useState } from "react";

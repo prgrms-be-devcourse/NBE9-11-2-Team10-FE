@@ -5,7 +5,6 @@ import { mockAuthMiddleware } from "../lib/mock-auth-middleware";
 import {
   FeedStore,
   CommentStore,
-  FeaturedProductStore,
 } from "../lib/mock-feed-data";
 import { MOCK_USERS } from "../lib/mock-user-data";
 
@@ -55,7 +54,9 @@ router.get("/:sellerId/feeds", (req: Request, res: Response) => {
     createdAt: feed.createdAt,
   }));
 
-  return res.status(200).json({ feeds: responseFeeds });
+  return res.status(200).json({
+    feeds: responseFeeds
+  });
 });
 
 // ============================================================================
@@ -137,50 +138,6 @@ router.get(
     });
   },
 );
-
-// ============================================================================
-// 🔹 GET /{sellerId}/featured-products - 강조 상품 목록 조회 (공용)
-// ============================================================================
-router.get("/:sellerId/featured-products", (req: Request, res: Response) => {
-  const rawSellerId = req.params.sellerId;
-
-  // ✅ 타입 가드: 배열이면 첫 번째 요소 사용, 아니면 그대로 사용
-  const sellerId = Array.isArray(rawSellerId) ? rawSellerId[0] : rawSellerId;
-
-  // ✅ 판매자 존재 여부 체크
-  const seller = Object.values(MOCK_USERS).find(
-    (u) => u.id.toString() === sellerId && u.role === "SELLER",
-  );
-
-  if (!seller) {
-    return res
-      .status(404)
-      .json(
-        createErrorResponse(
-          404,
-          "STORE_001",
-          "존재하지 않는 스토어입니다.",
-          `/api/v1/stores/${sellerId}/featured-products`,
-        ),
-      );
-  }
-
-  // ✅ 강조 상품 목록 조회 (displayOrder 기준 정렬, 최대 10 개)
-  const productList = FeaturedProductStore.findBySellerId(sellerId);
-
-  // ✅ 응답 DTO 매핑
-  const responseProducts = productList.map((product) => ({
-    productId: product.productId,
-    productName: product.productName,
-    thumbnailUrl: product.thumbnailUrl,
-    price: product.price,
-    discountRate: product.discountRate,
-    isSoldOut: product.isSoldOut,
-    displayOrder: product.displayOrder,
-  }));
-
-  return res.status(200).json({ products: responseProducts });
-});
 
 // ============================================================================
 // 🔹 POST /me/feeds - 피드 생성 (판매자 본인만)
