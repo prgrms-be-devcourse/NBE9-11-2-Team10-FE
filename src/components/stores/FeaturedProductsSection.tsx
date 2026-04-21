@@ -31,12 +31,6 @@ export async function FeaturedProductsSection({ sellerId }: Props) {
         <h2 className="text-xl font-bold mb-4 text-gray-800">Favorite</h2>
         <div className="text-center py-8 text-red-500">
           상품을 불러올 수 없습니다.
-          <button
-            onClick={() => window.location.reload()}
-            className="ml-2 text-sm underline hover:text-red-700"
-          >
-            다시 시도
-          </button>
         </div>
       </section>
     );

@@ -2,7 +2,9 @@
 import { Router, Request, Response } from "express";
 import { createErrorResponse } from "../lib/mock-common-data";
 import {
+  ProductStatus,
   ProductStore,
+  ProductType,
   PUBLIC_STATUSES,
   VALID_TYPES,
 } from "../lib/mock-product-data";
@@ -37,54 +39,46 @@ const parsePositiveInt = (value: unknown, fallback: number): number => {
 // 🔹 GET / - 상품 목록 조회 (페이징 + 필터)
 // ============================================================================
 router.get("/", (req: Request, res: Response) => {
-  const userPage = parsePositiveInt(req.query.page, 1);
-  const size = Math.min(parsePositiveInt(req.query.size, 10), 100);
-  const typeFilter = parseQuery(req.query.type);
-  const statusFilter = parseQuery(req.query.status);
+  try {
+    const { page, size, type, status, sellerId } = req.query;
+    
+    // 1. 기본 데이터 조회 (INACTIVE 제외)
+    let result = ProductStore.findAll({
+      type: type as ProductType,
+      status: status as ProductStatus,
+    });
 
-  if (userPage < 1) {
-    return res.status(400).json(
-      createErrorResponse(
-        400,
-        "CONSTRAINT_VIOLATION",
-        "입력값 검증에 실패했습니다.",
-        "/api/v1/products",
-        {
-          detail: "page 는 1 이상의 정수여야 합니다.",
-        },
-      ),
+    // ✅ [추가] sellerId 필터링 로직
+    // 쿼리 파라미터로 sellerId 가 전달되면 해당 판매자의 상품만 필터링
+    if (sellerId) {
+      const numericSellerId = Number(sellerId);
+      if (!isNaN(numericSellerId)) {
+        result = result.filter((p) => p.sellerId === numericSellerId);
+      }
+    }
+
+    // 2. 최신순 정렬 (createdAt 기준) - 강조 상품은 최신 제품이 나와야 하므로
+    result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    // 3. 페이지네이션 적용
+    const pageNum = Number(page) || 1;
+    const pageSize = Math.min(Number(size) || 10, 100);
+    const startIndex = (pageNum - 1) * pageSize;
+    const paginated = result.slice(startIndex, startIndex + pageSize);
+
+    return res.status(200).json({
+      content: paginated,
+      page: pageNum,
+      size: pageSize,
+      totalElements: result.length,
+      totalPages: Math.ceil(result.length / pageSize),
+    });
+  } catch (error) {
+    console.error("[GET /products] Error:", error);
+    return res.status(500).json(
+      createErrorResponse(500, "INTERNAL_ERROR", "상품 조회 중 오류가 발생했습니다.", "/api/v1/products")
     );
   }
-
-  const internalPage = userPage - 1;
-
-  // ✅ INACTIVE 는 ProductStore.findAll 에서 자동으로 제외됨
-  const filtered = ProductStore.findAll({
-    type: typeFilter as any,
-    status: statusFilter as any,
-  });
-
-  const totalElements = filtered.length;
-  const totalPages = Math.ceil(totalElements / size);
-  const startIndex = internalPage * size;
-  const paginated = filtered.slice(startIndex, startIndex + size);
-
-  const content = paginated.map((p) => ({
-    productId: p.productId,
-    productName: p.productName,
-    price: p.price,
-    imageUrl: p.imageUrl,
-    type: p.type,
-    status: p.status,
-  }));
-
-  return res.status(200).json({
-    content,
-    page: userPage,
-    size,
-    totalElements,
-    totalPages,
-  });
 });
 
 // ============================================================================

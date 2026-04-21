@@ -51,7 +51,7 @@ export async function fetchProductList(
       };
     }
 
-    const { page, size, type, status } = validated.data;
+    const { page, size, type, status, sellerId } = validated.data;
 
     // ✅ [ADAPTER] 1-based (FE) → 0-based (BE) 변환
     const apiPage = page; // ⭐ 사용자 1 → 백엔드 0
@@ -62,6 +62,7 @@ export async function fetchProductList(
     });
     if (type) params.append("type", type);
     if (status) params.append("status", status);
+    if (sellerId) params.append("sellerId", String(sellerId));
 
     const response = await fetch(`${API_BASE_URL}/api/v1/products?${params}`, {
       method: "GET",

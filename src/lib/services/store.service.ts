@@ -12,9 +12,12 @@ import {
   StoreProfileResponse,
   FeaturedProductListResponse,
   NicknameCheckResponse,
+  FeaturedProduct,
 } from "@/types/store";
 import { getForwardedHeaders, handleApiError } from "@/utils/helper";
 import { ApiError, ValidationError } from "@/utils/error/stores.error";
+import { fetchProductList } from "./product.service";
+import { ProblemDetailError } from "@/types/common";
 // ============================================================================
 // ⚙️ 설정
 // ============================================================================
@@ -154,25 +157,36 @@ export async function fetchFeaturedProducts(
     throw new Error("유효한 판매자 ID 가 필요합니다.");
   }
 
-  const headers = await getForwardedHeaders(
-    mockUserId && process.env.NODE_ENV === "test"
-      ? { "X-Mock-User-Id": mockUserId, "X-E2E-User-Id": mockUserId }
-      : undefined,
-  );
+  const result = await fetchProductList({
+    page: 1,
+    size: 3,
+    sellerId: Number(sellerId), 
+  });
 
-  const response = await fetch(
-    `${API_BASE_URL}/api/v1/stores/${sellerId}/featured-products`,
-    {
-      method: "GET",
-      headers,
-      cache: "no-store",
-    },
-  );
-
-  if (!response.ok) {
-    const error = await handleApiError(response);
-    throw ApiError.fromProblemDetail(error);
+  if (!result.success) {
+    // ✅ ProblemDetailError 구조에 맞춰 필수 필드 포함
+    const problemDetail: ProblemDetailError = {
+      type: "https://api.example.com/errors/FEATURED_PRODUCTS_FETCH_FAILED",
+      title: "강조 상품 조회 실패",
+      status: result.status,
+      detail: result.detail,
+      errorCode: result.errorCode,
+      validationErrors: result.validationErrors,
+    };
+    
+    // ✅ ApiError 생성 (fromProblemDetail 메서드 또는 생성자 사용)
+    throw new ApiError(problemDetail);
   }
 
-  return response.json() as Promise<FeaturedProductListResponse>;
+  const products: FeaturedProduct[] = result.data.content.map((item: any, index) => ({
+    productId: String(item.productId),        // number → string (필요시)
+    productName: item.productName,
+    thumbnailUrl: item.imageUrl || item.thumbnailUrl || "", // 필드명 확인 필요
+    price: item.price,
+    discountRate: item.discountRate,
+    isSoldOut: item.status === "SOLD_OUT",    // status 기반 변환
+    displayOrder: index,                      // 목록 순서를 displayOrder 로 활용
+  }));
+
+  return { products };
 }
