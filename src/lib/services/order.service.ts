@@ -80,7 +80,9 @@ export async function createOrder(
 export async function confirmOrder(
   data: ConfirmOrderRequest,
   mockUserId?: string,
+  options?: { timeoutMs?: number }
 ): Promise<ConfirmOrderResponse> {
+  const { timeoutMs = 15000 } = options ?? {};
   const validated = confirmOrderSchema.safeParse(data);
   if (!validated.success) {
     throw new OrderApiError({
@@ -102,22 +104,57 @@ export async function confirmOrder(
       : undefined,
   );
 
-  const response = await fetch(`${API_BASE_URL}/api/v1/orders/confirm`, {
-    method: "POST",
-    headers: { ...headers, "Content-Type": "application/json" },
-    body: JSON.stringify(validated.data),
-    cache: "no-store",
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (!response.ok) {
-    const error = await handleApiError(response);
-    throw OrderApiError.fromProblemDetail(error);
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/orders/confirm`, {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify(validated.data),
+      cache: "no-store",
+      signal: controller.signal, // ✅ 타임아웃 신호 연결
+    });
+
+    clearTimeout(timeoutId); // ✅ 성공 시 타이머 클리어
+
+    if (!response.ok) {
+      const error = await handleApiError(response);
+      throw OrderApiError.fromProblemDetail(error);
+    }
+
+    // ✅ 결제 성공 시 관련 캐시 무효화
+    revalidateTag(ORDER_CACHE_TAG, "max");
+
+    return response.json() as Promise<ConfirmOrderResponse>;
+    
+  } catch (error) {
+    clearTimeout(timeoutId); // ✅ 에러 시에도 타이머 클리어
+    
+    // ✅ 타임아웃 에러 구분 처리
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new OrderApiError({
+        type: "https://api.example.com/errors/TIMEOUT",
+        title: "결제 확인 시간 초과",
+        status: 504,
+        detail: "결제 확인 처리가 시간 내에 완료되지 않았습니다. 주문 상태를 확인해 주세요.",
+        errorCode: "CONFIRM_TIMEOUT",
+      });
+    }
+    
+    // ✅ 기존 에러 처리 유지
+    if (error instanceof OrderApiError) {
+      throw error;
+    }
+    
+    throw new OrderApiError({
+      type: "https://api.example.com/errors/NETWORK_ERROR",
+      title: "네트워크 오류",
+      status: 503,
+      detail: "결제 확인 중 네트워크 오류가 발생했습니다.",
+      errorCode: "NETWORK_ERROR",
+    });
   }
-
-  // ✅ 결제 성공 시 관련 캐시 무효화
-  revalidateTag(ORDER_CACHE_TAG, "max");
-
-  return response.json() as Promise<ConfirmOrderResponse>;
 }
 
 // ============================================================================

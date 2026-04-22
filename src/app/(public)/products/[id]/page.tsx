@@ -24,7 +24,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   // ✅ 데이터 조회
   const result = await fetchProductDetail(productId);
-  
+
   // ❌ 에러 처리
   if (!result.success) {
     if (result.status === 404) notFound();
@@ -125,7 +125,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
               <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
                 <span className="px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600">
-                  ✍️작가님: {product.nickname} 
+                  ✍️작가님: {product.nickname}
                 </span>
               </div>
             </div>
@@ -169,24 +169,29 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* ✅ 액션 버튼 */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
-            <button
-              disabled={product.status !== "SELLING" || product.stock === 0}
-              className="flex-1 py-3.5 px-6 bg-blue-600 text-white font-semibold rounded-xl 
-                         hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed 
-                         transition-all active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              {product.stock === 0 || product.status !== "SELLING"
-                ? "구매 불가"
-                : "구매하기"}
-            </button>
-            <button
-              disabled={product.status !== "SELLING"}
-              className="flex-1 py-3.5 px-6 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl 
-                         hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed 
-                         transition-all active:scale-[0.98]"
-            >
-              장바구니 담기
-            </button>
+            {product.stock > 0 && product.status === "SELLING" ? (
+              // 🔹 구매 가능한 경우: 링크로 이동
+              <Link
+                href={`/orders/new?productId=${product.productId}&quantity=1`}
+                className="flex-1 py-3.5 px-6 bg-blue-600 text-white font-semibold rounded-xl 
+                 hover:bg-blue-700 transition-all active:scale-[0.98] text-center"
+                data-testid={`product-buy-button-${product.productId}`}
+              >
+                구매하기
+              </Link>
+            ) : (
+              // 🔹 구매 불가능한 경우: 비활성화 버튼 (스타일만 유지)
+              <button
+                disabled
+                className="flex-1 py-3.5 px-6 bg-gray-200 text-gray-400 font-semibold rounded-xl 
+                 cursor-not-allowed text-center"
+                data-testid={`product-buy-button-${product.productId}-disabled`}
+                aria-disabled="true"
+                aria-label={product.stock === 0 ? "재고가 없습니다" : "판매 중인 상품이 아닙니다"}
+              >
+                {product.stock === 0 ? "품절" : "판매 종료"}
+              </button>
+            )}
           </div>
         </div>
       </div>

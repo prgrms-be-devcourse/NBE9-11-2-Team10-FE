@@ -10,6 +10,7 @@ export interface ProblemDetailError {
   errorCode: string;
   traceId?: string;
   validationErrors?: Array<{ field: string; message: string }>;
+  isTimeout?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }

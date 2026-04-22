@@ -1,5 +1,8 @@
 // ============================================================================
 // 📦 공통 API 응답 래퍼
+
+import { CreateOrderRequest } from "@/schemas/order.schema";
+
 // ============================================================================
 export interface ApiSuccessResponse<T> {
   success: true;
@@ -115,3 +118,20 @@ export interface SellerOrdersData {
 // 🔹 판매자 주문 목록 - 전체 응답 (래퍼 포함)
 export type SellerOrdersResponse = ApiResponse<SellerOrdersData>;
 
+export interface OrderActionState {
+  success: boolean;
+  message?: string;
+  errorCode?: string;
+  formData: Partial<CreateOrderRequest>;
+  errors: Record<string, string>;
+  data?: {
+    orderNumber: string;
+    paymentUrl?: string;
+  };
+}
+
+export const initialOrderState: OrderActionState = {
+  success: false,
+  formData: {},
+  errors: {},
+};
