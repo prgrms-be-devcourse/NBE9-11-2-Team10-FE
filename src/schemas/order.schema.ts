@@ -18,7 +18,6 @@ export const orderItemSchema = z.object({
 });
 
 export const createOrderSchema = z.object({
-  userId: z.number().int().positive("유효한 사용자 ID 가 필요합니다."),
   deliveryAddress: z
     .string()
     .min(1, "배송 주소는 필수입니다.")
@@ -45,7 +44,6 @@ export type ConfirmOrderRequest = z.infer<typeof confirmOrderSchema>;
 // 🔹 주문 취소 요청 스키마
 // ============================================================================
 export const cancelOrderSchema = z.object({
-  userId: z.number().int().positive(),
   orderNumber: z.string().min(1, "주문 번호는 필수입니다."),
 });
 
@@ -55,7 +53,6 @@ export type CancelOrderRequest = z.infer<typeof cancelOrderSchema>;
 // 🔹 주문 조회 쿼리 스키마
 // ============================================================================
 export const orderQuerySchema = z.object({
-  userId: z.number().int().positive(),
   orderNumber: z.string().optional(),
 });
 

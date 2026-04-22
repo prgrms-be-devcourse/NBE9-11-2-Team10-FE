@@ -88,10 +88,9 @@ export async function confirmOrderAction(
 // 🔹 구매자 주문 목록 조회 액션
 // ============================================================================
 export async function getBuyerOrdersAction(
-  userId: number,
 ): Promise<ActionResponse<BuyerOrdersResponse>> {
   try {
-    const result = await fetchBuyerOrders(userId);
+    const result = await fetchBuyerOrders();
     return { success: true, data: result, error: null };
   } catch (error) {
     if (error instanceof OrderApiError) {
@@ -115,10 +114,9 @@ export async function getBuyerOrdersAction(
 // 🔹 판매자 주문 목록 조회 액션
 // ============================================================================
 export async function getSellerOrdersAction(
-  userId: number,
 ): Promise<ActionResponse<SellerOrdersResponse>> {
   try {
-    const result = await fetchSellerOrders(userId);
+    const result = await fetchSellerOrders();
     return { success: true, data: result, error: null };
   } catch (error) {
     if (error instanceof OrderApiError) {
@@ -142,11 +140,10 @@ export async function getSellerOrdersAction(
 // 🔹 주문 상세 조회 액션
 // ============================================================================
 export async function getOrderDetailAction(
-  userId: number,
   orderNumber: string,
 ): Promise<ActionResponse<OrderDetailResponse>> {
   try {
-    const result = await fetchOrderDetail(userId, orderNumber);
+    const result = await fetchOrderDetail(orderNumber);
     return { success: true, data: result, error: null };
   } catch (error) {
     if (error instanceof OrderApiError) {
@@ -170,11 +167,10 @@ export async function getOrderDetailAction(
 // 🔹 주문 취소 액션
 // ============================================================================
 export async function cancelOrderAction(
-  userId: number,
   orderNumber: string,
 ): Promise<ActionResponse<CreateOrderResponse>> {
   try {
-    const result = await cancelOrder(userId, orderNumber);
+    const result = await cancelOrder(orderNumber);
     return { success: true, data: result, error: null };
   } catch (error) {
     if (error instanceof OrderApiError) {

@@ -39,21 +39,7 @@ router.post("/", mockAuthMiddleware, (req: Request, res: Response) => {
     return res.status(400).json(validationError);
   }
 
-  const { userId, deliveryAddress, orderProducts } = req.body as CreateOrderRequest;
-
-  // 2. 사용자 존재 여부 검증 (인증 미들웨어 통과했으므로 생략 가능)
-  if (userId !== user.id) {
-    return res
-      .status(403)
-      .json(
-        createErrorResponse(
-          403,
-          "ACCESS_DENIED",
-          "본인 계정으로만 주문할 수 있습니다.",
-          "/api/v1/orders",
-        ),
-      );
-  }
+  const { deliveryAddress, orderProducts } = req.body as CreateOrderRequest;
 
   // 3. 상품 존재 여부 검증
   const productError = validateProductsExist(orderProducts, "/api/v1/orders");
@@ -63,7 +49,7 @@ router.post("/", mockAuthMiddleware, (req: Request, res: Response) => {
 
   try {
     // 4. 주문 생성
-    const newOrder = OrderStore.create(userId, deliveryAddress, orderProducts);
+    const newOrder = OrderStore.create(user.id, deliveryAddress, orderProducts);
 
     // 5. 응답 반환 (명세서 기반)
     return res.status(200).json({
@@ -178,30 +164,13 @@ router.post("/confirm", mockAuthMiddleware, (req: Request, res: Response) => {
 });
 
 // ============================================================================
-// 🔹 GET /api/v1/orders/buyer/{userId} - 구매자 주문 목록 조회
+// 🔹 GET /api/v1/orders/buyer - 구매자 주문 목록 조회
 // ============================================================================
-router.get("/buyer/:userId", mockAuthMiddleware, (req: Request, res: Response) => {
+router.get("/buyer", mockAuthMiddleware, (req: Request, res: Response) => {
   const user = req.mockUser!;
-  const rawUserId = req.params.userId;
-  const userId = extractId(rawUserId);
-  const targetUserId = parseInt(userId, 10);
-
-  // 1. 본인 접근 권한 검증
-  if (user.id !== targetUserId) {
-    return res
-      .status(403)
-      .json(
-        createErrorResponse(
-          403,
-          "ACCESS_DENIED",
-          "해당 리소스에 대한 접근 권한이 없습니다.",
-          `/api/v1/orders/buyer/${targetUserId}`,
-        ),
-      );
-  }
 
   // 2. 주문 목록 조회
-  const orders = OrderStore.findByBuyerId(targetUserId);
+  const orders = OrderStore.findByBuyerId(user.id);
 
   // 3. 응답 DTO 매핑 (명세서 기반 요약)
   const orderSummaries = orders.map((order) => {
@@ -223,7 +192,7 @@ router.get("/buyer/:userId", mockAuthMiddleware, (req: Request, res: Response) =
   return res.status(200).json({
     success: true,
     data: {
-      userId: targetUserId,
+      userId: user.id,
       userName: user.nickname,
       orders: orderSummaries,
     },
@@ -232,28 +201,13 @@ router.get("/buyer/:userId", mockAuthMiddleware, (req: Request, res: Response) =
 });
 
 // ============================================================================
-// 🔹 GET /api/v1/orders/seller/{userId} - 판매자 주문 목록 조회
+// 🔹 GET /api/v1/orders/seller - 판매자 주문 목록 조회
 // ============================================================================
-router.get("/seller/:userId", mockSellerMiddleware, (req: Request, res: Response) => {
+router.get("/seller", mockSellerMiddleware, (req: Request, res: Response) => {
   const seller = req.mockUser!;
-  const targetUserId = parseInt(extractId(req.params.userId), 10);
-
-  // 1. 판매자 본인 접근 권한 검증
-  if (seller.id !== targetUserId) {
-    return res
-      .status(403)
-      .json(
-        createErrorResponse(
-          403,
-          "ACCESS_DENIED",
-          "해당 리소스에 대한 접근 권한이 없습니다.",
-          `/api/v1/orders/seller/${targetUserId}`,
-        ),
-      );
-  }
 
   // 2. 판매 내역 조회
-  const orders = OrderStore.findBySellerId(targetUserId);
+  const orders = OrderStore.findBySellerId(seller.id);
 
   // 3. 응답 DTO 매핑
   const orderSummaries = orders.map((order) => {
@@ -273,7 +227,7 @@ router.get("/seller/:userId", mockSellerMiddleware, (req: Request, res: Response
   return res.status(200).json({
     success: true,
     data: {
-      sellerId: targetUserId,
+      sellerId: seller.id,
       sellerName: seller.nickname,
       orders: orderSummaries,
     },
@@ -286,9 +240,6 @@ router.get("/seller/:userId", mockSellerMiddleware, (req: Request, res: Response
 // ============================================================================
 router.get("/:userId/:orderNumber", mockAuthMiddleware, (req: Request, res: Response) => {
   const user = req.mockUser!;
-  const rawUserId = req.params.userId;
-  const userId = extractId(rawUserId);
-  const targetUserId = parseInt(userId, 10);
   const orderNumber = extractId(req.params.orderNumber);
 
   // 1. 주문 조회
@@ -301,7 +252,7 @@ router.get("/:userId/:orderNumber", mockAuthMiddleware, (req: Request, res: Resp
           404,
           "ORDER_NOT_FOUND",
           "주문 내역을 찾을 수 없습니다.",
-          `/api/v1/orders/${targetUserId}/${orderNumber}`,
+          `/api/v1/orders/${orderNumber}`,
         ),
       );
   }
@@ -318,7 +269,7 @@ router.get("/:userId/:orderNumber", mockAuthMiddleware, (req: Request, res: Resp
           403,
           "ACCESS_DENIED",
           "해당 리소스에 대한 접근 권한이 없습니다.",
-          `/api/v1/orders/${targetUserId}/${orderNumber}`,
+          `/api/v1/orders/${orderNumber}`,
         ),
       );
   }
@@ -339,26 +290,11 @@ router.get("/:userId/:orderNumber", mockAuthMiddleware, (req: Request, res: Resp
 });
 
 // ============================================================================
-// 🔹 DELETE /api/v1/orders/{userId}/{orderNumber} - 주문 취소
+// 🔹 DELETE /api/v1/orders/{orderNumber} - 주문 취소
 // ============================================================================
-router.delete("/:userId/:orderNumber", mockAuthMiddleware, (req: Request, res: Response) => {
+router.delete("/:orderNumber", mockAuthMiddleware, (req: Request, res: Response) => {
   const user = req.mockUser!;
-  const targetUserId = parseInt(extractId(req.params.userId), 10);
   const orderNumber = extractId(req.params.orderNumber);
-
-  // 1. 본인 접근 권한 검증
-  if (user.id !== targetUserId) {
-    return res
-      .status(403)
-      .json(
-        createErrorResponse(
-          403,
-          "ACCESS_DENIED",
-          "본인 주문만 취소할 수 있습니다.",
-          `/api/v1/orders/${targetUserId}/${orderNumber}`,
-        ),
-      );
-  }
 
   // 2. 주문 조회
   const order = OrderStore.findByOrderNumber(orderNumber);
@@ -370,7 +306,7 @@ router.delete("/:userId/:orderNumber", mockAuthMiddleware, (req: Request, res: R
           404,
           "ORDER_NOT_FOUND",
           "주문 내역을 찾을 수 없습니다.",
-          `/api/v1/orders/${targetUserId}/${orderNumber}`,
+          `/api/v1/orders/${orderNumber}`,
         ),
       );
   }
@@ -384,7 +320,7 @@ router.delete("/:userId/:orderNumber", mockAuthMiddleware, (req: Request, res: R
           403,
           "ACCESS_DENIED",
           "본인 주문만 취소할 수 있습니다.",
-          `/api/v1/orders/${targetUserId}/${orderNumber}`,
+          `/api/v1/orders/${orderNumber}`,
         ),
       );
   }
@@ -398,7 +334,7 @@ router.delete("/:userId/:orderNumber", mockAuthMiddleware, (req: Request, res: R
           400,
           "CANNOT_CANCEL",
           "이미 배송이 시작된 주문은 취소할 수 없습니다.",
-          `/api/v1/orders/${targetUserId}/${orderNumber}`,
+          `/api/v1/orders/${orderNumber}`,
         ),
       );
   }
@@ -428,7 +364,7 @@ router.delete("/:userId/:orderNumber", mockAuthMiddleware, (req: Request, res: R
           500,
           "INTERNAL_ERROR",
           "주문 취소 중 서버 오류가 발생했습니다.",
-          `/api/v1/orders/${targetUserId}/${orderNumber}`,
+          `/api/v1/orders/${orderNumber}`,
         ),
       );
   }

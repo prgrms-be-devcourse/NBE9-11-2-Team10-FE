@@ -30,7 +30,6 @@ export interface Order {
 }
 
 export interface CreateOrderRequest {
-    userId: number;
     deliveryAddress: string;
     orderProducts: Array<{ productId: number; quantity: number }>;
 }

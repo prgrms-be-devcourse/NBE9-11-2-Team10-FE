@@ -117,15 +117,11 @@ export async function confirmOrder(
 }
 
 // ============================================================================
-// 🔹 GET /api/v1/orders/buyer/{userId} - 구매자 주문 목록 조회
+// 🔹 GET /api/v1/orders/buyer - 구매자 주문 목록 조회
 // ============================================================================
 export async function fetchBuyerOrders(
-  userId: number,
   mockUserId?: string,
 ): Promise<BuyerOrdersResponse> {
-  if (!userId || !Number.isInteger(userId) || userId <= 0) {
-    throw new Error("유효한 사용자 ID 가 필요합니다.");
-  }
 
   const headers = await getForwardedHeaders(
     mockUserId && process.env.NODE_ENV === "test"
@@ -134,7 +130,7 @@ export async function fetchBuyerOrders(
   );
 
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/orders/buyer/${userId}`,
+    `${API_BASE_URL}/api/v1/orders/buyer`,
     {
       method: "GET",
       headers,
@@ -152,16 +148,11 @@ export async function fetchBuyerOrders(
 }
 
 // ============================================================================
-// 🔹 GET /api/v1/orders/seller/{userId} - 판매자 주문 목록 조회
+// 🔹 GET /api/v1/orders/seller - 판매자 주문 목록 조회
 // ============================================================================
 export async function fetchSellerOrders(
-  userId: number,
   mockUserId?: string,
 ): Promise<SellerOrdersResponse> {
-  if (!userId || !Number.isInteger(userId) || userId <= 0) {
-    throw new Error("유효한 판매자 ID 가 필요합니다.");
-  }
-
   const headers = await getForwardedHeaders(
     mockUserId && process.env.NODE_ENV === "test"
       ? { "X-Mock-User-Id": mockUserId, "X-E2E-User-Id": mockUserId }
@@ -169,7 +160,7 @@ export async function fetchSellerOrders(
   );
 
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/orders/seller/${userId}`,
+    `${API_BASE_URL}/api/v1/orders/seller`,
     {
       method: "GET",
       headers,
@@ -187,17 +178,12 @@ export async function fetchSellerOrders(
 }
 
 // ============================================================================
-// 🔹 GET /api/v1/orders/{userId}/{orderNumber} - 주문 상세 조회
+// 🔹 GET /api/v1/orders/{orderNumber} - 주문 상세 조회
 // ============================================================================
 export async function fetchOrderDetail(
-  userId: number,
   orderNumber: string,
   mockUserId?: string,
 ): Promise<OrderDetailResponse> {
-  if (!userId || !orderNumber) {
-    throw new Error("userId 와 orderNumber 는 필수입니다.");
-  }
-
   const headers = await getForwardedHeaders(
     mockUserId && process.env.NODE_ENV === "test"
       ? { "X-Mock-User-Id": mockUserId, "X-E2E-User-Id": mockUserId }
@@ -205,7 +191,7 @@ export async function fetchOrderDetail(
   );
 
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/orders/${userId}/${orderNumber}`,
+    `${API_BASE_URL}/api/v1/orders/${orderNumber}`,
     {
       method: "GET",
       headers,
@@ -223,17 +209,12 @@ export async function fetchOrderDetail(
 }
 
 // ============================================================================
-// 🔹 DELETE /api/v1/orders/{userId}/{orderNumber} - 주문 취소
+// 🔹 DELETE /api/v1/orders/{orderNumber} - 주문 취소
 // ============================================================================
 export async function cancelOrder(
-  userId: number,
   orderNumber: string,
   mockUserId?: string,
 ): Promise<CreateOrderResponse> {
-  if (!userId || !orderNumber) {
-    throw new Error("userId 와 orderNumber 는 필수입니다.");
-  }
-
   const headers = await getForwardedHeaders(
     mockUserId && process.env.NODE_ENV === "test"
       ? { "X-Mock-User-Id": mockUserId, "X-E2E-User-Id": mockUserId }
@@ -241,7 +222,7 @@ export async function cancelOrder(
   );
 
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/orders/${userId}/${orderNumber}`,
+    `${API_BASE_URL}/api/v1/orders/${orderNumber}`,
     {
       method: "DELETE",
       headers,

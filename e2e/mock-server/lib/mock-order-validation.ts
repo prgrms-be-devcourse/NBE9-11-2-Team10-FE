@@ -11,13 +11,6 @@ export const validateCreateOrder = (
 ): ProblemDetailResponse | null => {
   const errors: Array<{ field: string; message: string }> = [];
 
-  // userId 검증
-  if (body.userId === undefined || body.userId === null) {
-    errors.push({ field: "userId", message: "사용자 ID 는 필수입니다." });
-  } else if (!Number.isInteger(body.userId) || body.userId <= 0) {
-    errors.push({ field: "userId", message: "유효한 사용자 ID 가 필요합니다." });
-  }
-
   // deliveryAddress 검증
   if (!body.deliveryAddress || typeof body.deliveryAddress !== "string") {
     errors.push({ field: "deliveryAddress", message: "배송 주소는 필수입니다." });
