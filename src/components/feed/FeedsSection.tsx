@@ -45,7 +45,7 @@ export async function FeedsSection({ sellerId }: Props) {
     );
   }
 
-  if (!feedList.feeds.length) {
+  if (!feedList.data.feeds.length) {
     return (
       <section className="bg-gray-50 rounded-lg p-6 mb-6">
         <h2 className="text-xl font-bold mb-4 text-gray-800">Activity</h2>
@@ -75,7 +75,7 @@ export async function FeedsSection({ sellerId }: Props) {
         + 피드 작성
       </Link>
       <FeedItemList
-        feeds={feedList.feeds}
+        feeds={feedList.data.feeds}
         sellerId={sellerId}
       />
     </section>

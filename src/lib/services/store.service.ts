@@ -56,7 +56,9 @@ export async function queryStoreProfile(
     throw ApiError.fromProblemDetail(error); // ✅ 에러는 throw 로 처리
   }
 
-  return response.json() as Promise<QueriedStoreProfile>;
+  const data = await response.json() as QueriedStoreProfile;
+
+  return data;
 }
 
 // ============================================================================
@@ -90,7 +92,9 @@ export async function fetchStoreProfile(
     throw ApiError.fromProblemDetail(error); // ✅ 에러는 throw 로 처리
   }
 
-  return response.json() as Promise<StoreProfileResponse>;
+  const data = await response.json() as StoreProfileResponse;
+
+  return data;
 }
 
 // ============================================================================

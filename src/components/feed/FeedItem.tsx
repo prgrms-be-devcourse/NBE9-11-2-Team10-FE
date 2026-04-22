@@ -29,7 +29,7 @@ export function FeedItem({ feed, sellerId, isMine }: Props) {
     try {
       const response = await fetchCommentList(
         sellerId,
-        feed.feedId,
+        feed.id,
         {
           page: 0,
           size: 10,
@@ -44,7 +44,7 @@ export function FeedItem({ feed, sellerId, isMine }: Props) {
     } finally {
       setIsLoadingComments(false);
     }
-  }, [sellerId, feed.feedId, isCommentsLoaded, isLoadingComments]);
+  }, [sellerId, feed.id, isCommentsLoaded, isLoadingComments]);
 
   // ✅ 댓글 토글 핸들러
   const toggleComments = () => {
@@ -80,11 +80,11 @@ export function FeedItem({ feed, sellerId, isMine }: Props) {
         {/* 👈 소유자일 경우 액션 버튼 표시 */}
         <FeedActions
           sellerId={sellerId}
-          feedId={feed.feedId}
+          feedId={feed.id}
           isMine={isMine ?? false}
           onEdit={() => {
             // 수정 페이지로 이동 (Next.js App Router)
-            window.location.href = `/stores/${sellerId}/feeds/${feed.feedId}/edit`;
+            window.location.href = `/stores/${sellerId}/feeds/${feed.id}/edit`;
           }}
           onDelete={() => {
             // 삭제 후 페이지 새로고침
@@ -138,7 +138,7 @@ export function FeedItem({ feed, sellerId, isMine }: Props) {
             <CommentList
               comments={comments}
               sellerId={sellerId}
-              feedId={feed.feedId}
+              feedId={feed.id}
               onLoadMore={(newComments) => {
                 setComments((prev) => [...prev, ...newComments]);
               }}

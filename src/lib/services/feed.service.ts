@@ -62,7 +62,9 @@ export async function fetchFeedList(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<FeedListResponse>;
+  const data = await response.json() as FeedListResponse;
+
+  return data;
 }
 // ============================================================================
 // 🔹 GET /api/v1/stores/{sellerId}/feeds/{feedId}/comments - 댓글 목록 조회
@@ -117,7 +119,9 @@ export async function fetchCommentList(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<CommentListResponse>;
+  const data = await response.json() as CommentListResponse;
+
+  return data;
 }
 
 // ============================================================================
@@ -168,7 +172,9 @@ export async function createFeed(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<CreateFeedResponse>;
+  const data = await response.json() as CreateFeedResponse;
+
+  return data;
 }
 
 // ============================================================================
@@ -225,7 +231,9 @@ export async function updateFeed(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<CreateFeedResponse>;
+  const data = await response.json() as CreateFeedResponse;
+
+  return data;
 }
 
 // ============================================================================
@@ -301,7 +309,9 @@ export async function toggleFeedLike(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<FeedLikeToggleResponse>;
+  const data = await response.json() as FeedLikeToggleResponse;
+
+  return data;
 }
 
 // ============================================================================
@@ -355,7 +365,9 @@ export async function createComment(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<CommentResponse>;
+  const data = await response.json() as CommentResponse;
+
+  return data;
 }
 
 // ============================================================================
@@ -446,5 +458,7 @@ export async function toggleCommentLike(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<CommentLikeToggleResponse>;
+  const data = await response.json() as CommentLikeToggleResponse;
+
+  return data;
 }

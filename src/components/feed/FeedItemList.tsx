@@ -20,7 +20,7 @@ export function FeedItemList({ feeds, sellerId }: Props) {
     <div className="space-y-6" data-testid="feeds-list">
       {feeds.map((feed) => (
         <FeedItem
-          key={feed.feedId}
+          key={feed.id}
           feed={feed}
           sellerId={sellerId}
           isMine={isMine}  // 👈 계산된 값 전달

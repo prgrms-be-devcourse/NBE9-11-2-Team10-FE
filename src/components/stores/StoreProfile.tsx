@@ -43,17 +43,17 @@ export async function StoreProfile({ sellerId }: Props) {
             className="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200"
             data-testid="profile-avatar"
           >
-            {profile.imageUrl ? (
+            {profile.data.imageUrl ? (
               <Image
-                src={profile.imageUrl}
-                alt={profile.nickname}
+                src={profile.data.imageUrl}
+                alt={profile.data.nickname}
                 fill
                 className="object-cover"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500">
                 <span className="text-3xl font-bold text-white">
-                  {profile.nickname.charAt(0).toUpperCase()}
+                  {profile.data.nickname.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
@@ -63,15 +63,15 @@ export async function StoreProfile({ sellerId }: Props) {
             className="text-xl font-bold text-gray-800 mb-1"
             data-testid="profile-nickname"
           >
-            {profile.nickname}
+            {profile.data.nickname}
           </h1>
 
-          {profile.bio && (
+          {profile.data.bio && (
             <p
               className="text-sm text-gray-600 mb-4 line-clamp-2"
               data-testid="profile-bio"
             >
-              {profile.bio}
+              {profile.data.bio}
             </p>
           )}
         </div>

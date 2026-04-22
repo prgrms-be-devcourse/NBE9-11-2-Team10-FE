@@ -3,7 +3,7 @@
 // ============================================================================
 
 export interface Feed {
-  feedId: string;
+  id: string;
   content: string;
   mediaUrls: string[];
   likeCount: number;
@@ -14,7 +14,9 @@ export interface Feed {
 }
 
 export interface FeedListResponse {
-  feeds: Feed[];
+  data: {
+    feeds: Feed[];
+  }
   pagination?: {
     currentPage: number;
     totalPages: number;
