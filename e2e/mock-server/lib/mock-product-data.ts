@@ -13,6 +13,7 @@ export interface Product {
   description?: string;
   price: number;
   stock: number;
+  nickname: string;
   type: ProductType;
   imageUrl?: string | null;
   status: ProductStatus;
@@ -46,6 +47,7 @@ let products: Product[] = [
     type: "BOOK",
     imageUrl: "https://example.com/images/spring-intro.jpg",
     status: "SELLING",
+    nickname: MOCK_USERS.SELLER.nickname,
     sellerId: MOCK_USERS.SELLER.id,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -59,6 +61,7 @@ let products: Product[] = [
     type: "EBOOK",
     imageUrl: "https://example.com/images/book1.jpg",
     status: "SELLING",
+    nickname: MOCK_USERS.SELLER.nickname,
     sellerId: MOCK_USERS.SELLER.id,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -72,6 +75,7 @@ let products: Product[] = [
     type: "EBOOK",
     imageUrl: null,
     status: "SOLD_OUT",
+    nickname: MOCK_USERS.SELLER.nickname,
     sellerId: MOCK_USERS.SELLER.id,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -154,6 +158,7 @@ export const ProductStore = {
         type: "BOOK",
         imageUrl: "https://example.com/images/spring-intro.jpg",
         status: "SELLING",
+        nickname: MOCK_USERS.SELLER.nickname,
         sellerId: MOCK_USERS.SELLER.id,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -167,6 +172,7 @@ export const ProductStore = {
         type: "EBOOK",
         imageUrl: "https://example.com/images/book1.jpg",
         status: "SELLING",
+        nickname: MOCK_USERS.SELLER.nickname,
         sellerId: MOCK_USERS.SELLER.id,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -180,6 +186,7 @@ export const ProductStore = {
         type: "EBOOK",
         imageUrl: null,
         status: "SOLD_OUT",
+        nickname: MOCK_USERS.SELLER.nickname,
         sellerId: MOCK_USERS.SELLER.id,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

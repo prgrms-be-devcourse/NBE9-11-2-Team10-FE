@@ -14,6 +14,7 @@ import {
   VALID_STATUSES,
   Product,
 } from "../lib/mock-product-data";
+import { MOCK_SELLER } from "../../test-case/product/fixtures/product-fixture";
 
 export const router = Router();
 
@@ -270,6 +271,7 @@ router.post("/", mockSellerMiddleware, (req: Request, res: Response) => {
     imageUrl: imageUrl || null,
     status: "SELLING",
     sellerId: user.id,
+    nickname: MOCK_SELLER.nickname, // 임시 값 !!
   });
 
   return res.status(201).json({

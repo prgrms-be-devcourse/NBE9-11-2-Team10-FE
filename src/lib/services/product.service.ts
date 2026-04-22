@@ -17,6 +17,7 @@ import {
   ProductDeactivateResult,
   ProductActionState,
   Product,
+  ProductListResponse,
 } from "@/types/product";
 import {
   getForwardedHeaders,
@@ -75,18 +76,9 @@ export async function fetchProductList(
       return { success: false, ...parseProblemDetail(error) };
     }
 
-    const data = await response.json();
+    const data = await response.json() as ProductListResult;
 
-    return {
-      success: true,
-      data: {
-        content: data.content,
-        page: data.page,
-        size: data.size,
-        totalElements: data.totalElements,
-        totalPages: data.totalPages,
-      },
-    };
+    return data;
   } catch (error) {
     console.error("[fetchProductList] Network Error:", error);
     return {
@@ -131,12 +123,9 @@ export async function fetchProductDetail(
       };
     }
 
-    const data = await response.json();
+    const data = await response.json() as ProductDetailResult;
 
-    return {
-      success: true,
-      data: data as Product,
-    };
+    return data;
   } catch (error) {
     console.error("[fetchProductDetail] Network Error:", error);
     return {
