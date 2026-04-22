@@ -12,6 +12,7 @@ import {
 import {
   StoreProfileStore,
   BusinessInfo,
+  QueriedStoreProfile,
 } from "../lib/mock-store-profile-data";
 import { MOCK_USERS } from "../lib/mock-user-data";
 import { FeaturedProductStore } from "../lib/mock-featured-product";
@@ -306,7 +307,7 @@ router.put(
 );
 
 // ============================================================================
-// 🔹 GET /{sellerId}/profile - 공개 프로필 조회 (공용)
+// 🔹 GET /{sellerId}/profile - 전용 스토어 프로필
 // ============================================================================
 router.get("/:sellerId/profile", (req: Request, res: Response) => {
   const rawSellerId = req.params.sellerId;

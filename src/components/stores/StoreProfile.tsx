@@ -1,4 +1,4 @@
-import { fetchStoreProfile } from "@/lib/services/store.service";
+import { queryStoreProfile } from "@/lib/services/store.service";
 import { ApiError } from "@/utils/error/stores.error";
 import Image from "next/image";
 
@@ -10,7 +10,7 @@ export async function StoreProfile({ sellerId }: Props) {
   let profile;
 
   try {
-    profile = await fetchStoreProfile(sellerId);
+    profile = await queryStoreProfile(sellerId);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
       return (
@@ -43,9 +43,9 @@ export async function StoreProfile({ sellerId }: Props) {
             className="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200"
             data-testid="profile-avatar"
           >
-            {profile.profileImageUrl ? (
+            {profile.imageUrl ? (
               <Image
-                src={profile.profileImageUrl}
+                src={profile.imageUrl}
                 alt={profile.nickname}
                 fill
                 className="object-cover"
@@ -74,66 +74,6 @@ export async function StoreProfile({ sellerId }: Props) {
               {profile.bio}
             </p>
           )}
-
-          <div
-            className="flex justify-center gap-6 text-sm mb-4"
-            data-testid="profile-stats"
-          >
-            <div className="text-center" data-testid="stat-followers">
-              <div
-                className="font-bold text-gray-900"
-                data-testid="stat-value-followers"
-              >
-                {profile.stats.followerCount}
-              </div>
-              <div className="text-gray-500">구독자</div>
-            </div>
-            <div className="text-center" data-testid="stat-products">
-              <div
-                className="font-bold text-gray-900"
-                data-testid="stat-value-products"
-              >
-                {profile.stats.productCount}
-              </div>
-              <div className="text-gray-500">상품</div>
-            </div>
-            <div className="text-center" data-testid="stat-feeds">
-              <div
-                className="font-bold text-gray-900"
-                data-testid="stat-value-feeds"
-              >
-                {profile.stats.feedCount}
-              </div>
-              <div className="text-gray-500">피드</div>
-            </div>
-          </div>
-
-          {profile.businessInfo && (
-            <div className="text-xs text-gray-500 space-y-1 mb-4">
-              {profile.businessInfo.businessName && (
-                <p>{profile.businessInfo.businessName}</p>
-              )}
-              {profile.businessInfo.ceoName && (
-                <p>대표: {profile.businessInfo.ceoName}</p>
-              )}
-            </div>
-          )}
-
-          <div className="text-xs text-gray-400">
-            {new Date(profile.createdAt).toLocaleDateString("ko-KR", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}{" "}
-            가입
-          </div>
-        </div>
-
-        <div className="border-t pt-4">
-          <div className="text-xs text-gray-500 mb-1">판매자 ID</div>
-          <div className="text-sm font-mono text-gray-700 break-all">
-            {profile.sellerId}
-          </div>
         </div>
       </div>
     </aside>

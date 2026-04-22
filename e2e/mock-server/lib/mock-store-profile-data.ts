@@ -9,6 +9,13 @@ export interface BusinessInfo {
   ceoName?: string; // 대표자명 (최대 50 자)
 }
 
+export interface QueriedStoreProfile {
+  name: string; // UUID 형식
+  nickname: string; // 2~20 자
+  imageUrl?: string | null; // URL 형식
+  bio?: string; // 최대 500 자
+}
+
 export interface StoreProfile {
   sellerId: string; // UUID 형식
   nickname: string; // 2~20 자

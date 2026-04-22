@@ -13,6 +13,7 @@ import {
   FeaturedProductListResponse,
   NicknameCheckResponse,
   FeaturedProduct,
+  QueriedStoreProfile,
 } from "@/types/store";
 import { getForwardedHeaders, handleApiError } from "@/utils/helper";
 import { ApiError, ValidationError } from "@/utils/error/stores.error";
@@ -23,6 +24,40 @@ import { ProblemDetailError } from "@/types/common";
 // ============================================================================
 const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:4000";
 const STORE_CACHE_TAG = "store-profile";
+
+// ============================================================================
+// 🔹 GET /api/v1/sellers/{sellerId} - 프로필 조회 (all)
+// ============================================================================
+export async function queryStoreProfile(
+  sellerId: string,
+  mockUserId?: string,
+): Promise<QueriedStoreProfile> {
+  if (!sellerId || typeof sellerId !== "string") {
+    throw new Error("유효한 판매자 ID 가 필요합니다.");
+  }
+
+  const headers = await getForwardedHeaders(
+    mockUserId && process.env.NODE_ENV === "test"
+      ? { "X-Mock-User-Id": mockUserId, "X-E2E-User-Id": mockUserId }
+      : undefined,
+  );
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/sellers/${sellerId}`,
+    {
+      method: "GET",
+      headers,
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const error = await handleApiError(response);
+    throw ApiError.fromProblemDetail(error); // ✅ 에러는 throw 로 처리
+  }
+
+  return response.json() as Promise<QueriedStoreProfile>;
+}
 
 // ============================================================================
 // 🔹 GET /api/v1/stores/{sellerId}/profile - 프로필 조회

@@ -8,6 +8,13 @@ export interface BusinessInfo {
   ceoName?: string;
 }
 
+export interface QueriedStoreProfile {
+  name: string;
+  nickname: string;
+  imageUrl?: string | null;
+  bio?: string;
+}
+
 export interface StoreProfileResponse {
   sellerId: string;
   nickname: string;

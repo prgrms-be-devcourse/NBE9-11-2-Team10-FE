@@ -205,22 +205,6 @@ export const test = base.extend<{
             profile.bio,
           );
         }
-
-        // 통계 값들
-        await expect(sidebar.getByTestId("stat-value-followers")).toHaveText(
-          String(profile.stats.followerCount),
-        );
-        await expect(sidebar.getByTestId("stat-value-products")).toHaveText(
-          String(profile.stats.productCount),
-        );
-        await expect(sidebar.getByTestId("stat-value-feeds")).toHaveText(
-          String(profile.stats.feedCount),
-        );
-
-        // 라벨 텍스트도 함께 검증 (선택사항)
-        await expect(sidebar.getByText("구독자")).toBeVisible();
-        await expect(sidebar.getByText("상품")).toBeVisible();
-        await expect(sidebar.getByText("피드")).toBeVisible();
       },
 
       // 🔹 강조 상품 섹션 검증

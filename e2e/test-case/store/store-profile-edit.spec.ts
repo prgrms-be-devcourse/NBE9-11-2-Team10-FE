@@ -204,8 +204,6 @@ test.describe('✏️ 판매자 프로필 수정 페이지', () => {
     await expect(page.getByTestId('profile-bio')).toHaveText(
       '업데이트된 소개 문구입니다.',
     );
-    // 사이드바에 사업자 정보가 표시되는지 검증 (구현에 따라 조정)
-    await expect(page.getByText('(주)업데이트컴퍼니')).toBeVisible();
   });
 
   test('프로필 이미지 URL 변경 - 빈 값으로 초기화 가능', async ({

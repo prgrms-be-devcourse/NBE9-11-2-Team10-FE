@@ -10,6 +10,7 @@ import productsRoutes from "./routes/products.routes"; // 공용: 상품 조회
 import storeProductsRoutes from "./routes/store-products.routes"; // 판매자: 상품 관리
 import storeProfileRoutes from "./routes/store-profiles.routes";
 import storeFeedsRoutes from "./routes/store-feeds.routes";
+import sellerRoutes from "./routes/seller.routes"
 import debugRoutes from "./routes/debug.routes";
 import { StoreProfileStore } from "./lib/mock-store-profile-data";
 import { ProductStore } from "./lib/mock-product-data";
@@ -60,6 +61,7 @@ app.use("/api/v1/products", productsRoutes); // 📦 상품 조회 (공용)
 app.use("/api/v1/stores/me/products", storeProductsRoutes); // 🏪 상품 관리 (판매자)
 app.use("/api/v1/stores", storeProfileRoutes);
 app.use("/api/v1/stores", storeFeedsRoutes);
+app.use("/api/v1/sellers", sellerRoutes);
 app.use("/api/v1/__debug", debugRoutes); // 인증 쿠키 테스트 용 (e2e 전용)
 
 app.post("/api/v1/__reset", (req: Request, res: Response) => {
