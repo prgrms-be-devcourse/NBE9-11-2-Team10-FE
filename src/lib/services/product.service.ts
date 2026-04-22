@@ -80,11 +80,11 @@ export async function fetchProductList(
     return {
       success: true,
       data: {
-        content: data.content,
-        page: data.page,
-        size: data.size,
-        totalElements: data.totalElements,
-        totalPages: data.totalPages,
+        content: data.data.content,
+        page: data.data.page,
+        size: data.data.size,
+        totalElements: data.data.totalElements,
+        totalPages: data.data.totalPages,
       },
     };
   } catch (error) {
@@ -135,7 +135,7 @@ export async function fetchProductDetail(
 
     return {
       success: true,
-      data: data as Product,
+      data: data.data as Product,
     };
   } catch (error) {
     console.error("[fetchProductDetail] Network Error:", error);
