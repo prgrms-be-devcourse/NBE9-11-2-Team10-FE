@@ -76,7 +76,9 @@ export interface PaginationInfo {
 }
 
 export interface CommentListResponse {
-  comments: CommentResponse[];
+  data: {
+    comments: CommentResponse[];
+  }
   pagination: PaginationInfo;
 }
 

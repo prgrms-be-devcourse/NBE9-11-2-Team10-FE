@@ -36,7 +36,7 @@ export function FeedItem({ feed, sellerId, isMine }: Props) {
           sort: "createdAt,desc",
         },
       );
-      setComments(response.comments);
+      setComments(response.data.comments);
       setIsCommentsLoaded(true);
       setShowComments(true);
     } catch (error) {
