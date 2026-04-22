@@ -6,6 +6,7 @@ export interface FeaturedProduct {
   productName: string; // 최대 100 자
   thumbnailUrl: string; // URL
   price: number;
+  nickname: string;
   discountRate?: number; // 0~100
   isSoldOut: boolean;
   displayOrder: number; // 1~10
@@ -22,6 +23,7 @@ export const toFeaturedProduct = (
   productName: product.productName,
   thumbnailUrl: product.imageUrl ?? "https://example.com/images/no-image.png",
   price: product.price,
+  nickname: product.nickname,
   discountRate: product.stock > 0 && product.price > 0
     ? Math.min(100, Math.floor(Math.random() * 30)) // mock: 0~30% 랜덤 할인
     : 0,
@@ -71,6 +73,7 @@ export const FeaturedProductStore = {
       productId: numericId,
       productName: data.productName,
       price: data.price,
+      nickname: data.nickname,
       stock: data.isSoldOut ? 0 : 10, // mock: 재고 단순화
       status: data.isSoldOut ? ("SOLD_OUT" as const) : ("SELLING" as const),
       imageUrl: data.thumbnailUrl !== "https://example.com/images/no-image.png"

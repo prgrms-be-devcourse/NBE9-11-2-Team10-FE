@@ -24,7 +24,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   // ✅ 데이터 조회
   const result = await fetchProductDetail(productId);
-  console.log(result);
+  
   // ❌ 에러 처리
   if (!result.success) {
     if (result.status === 404) notFound();

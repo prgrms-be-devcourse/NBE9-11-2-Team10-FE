@@ -19,12 +19,9 @@ export default function HomePage() {
       .then((result: ProductListResult) => {
         if (result.success) {
           setProducts(result.data.content);
-        } else {
-          console.error(result.detail);
-        }
+        } 
       })
-      .catch((err) => {
-        console.error('API 에러:', err);
+      .catch(() => {
       });
   }, []);
 
