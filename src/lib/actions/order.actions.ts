@@ -11,6 +11,8 @@ import {
   OrderDetailResponse,
   BuyerOrdersResponse,
   SellerOrdersResponse,
+  ApiResponse,
+  BuyerOrdersData,
 } from "@/types/order";
 import {
   createOrder,
@@ -84,84 +86,6 @@ export async function confirmOrderAction(
   }
 }
 
-// ============================================================================
-// 🔹 구매자 주문 목록 조회 액션
-// ============================================================================
-export async function getBuyerOrdersAction(
-): Promise<ActionResponse<BuyerOrdersResponse>> {
-  try {
-    const result = await fetchBuyerOrders();
-    return { success: true, data: result, error: null };
-  } catch (error) {
-    if (error instanceof OrderApiError) {
-      return { success: false, data: null, error: error.problemDetail };
-    }
-    return {
-      success: false,
-      data: null,
-      error: {
-        type: "https://api.example.com/errors/INTERNAL_ERROR",
-        title: "서버 내부 오류",
-        status: 500,
-        detail: "주문 목록 조회 중 오류가 발생했습니다.",
-        errorCode: "INTERNAL_ERROR",
-      },
-    };
-  }
-}
-
-// ============================================================================
-// 🔹 판매자 주문 목록 조회 액션
-// ============================================================================
-export async function getSellerOrdersAction(
-): Promise<ActionResponse<SellerOrdersResponse>> {
-  try {
-    const result = await fetchSellerOrders();
-    return { success: true, data: result, error: null };
-  } catch (error) {
-    if (error instanceof OrderApiError) {
-      return { success: false, data: null, error: error.problemDetail };
-    }
-    return {
-      success: false,
-      data: null,
-      error: {
-        type: "https://api.example.com/errors/INTERNAL_ERROR",
-        title: "서버 내부 오류",
-        status: 500,
-        detail: "판매 내역 조회 중 오류가 발생했습니다.",
-        errorCode: "INTERNAL_ERROR",
-      },
-    };
-  }
-}
-
-// ============================================================================
-// 🔹 주문 상세 조회 액션
-// ============================================================================
-export async function getOrderDetailAction(
-  orderNumber: string,
-): Promise<ActionResponse<OrderDetailResponse>> {
-  try {
-    const result = await fetchOrderDetail(orderNumber);
-    return { success: true, data: result, error: null };
-  } catch (error) {
-    if (error instanceof OrderApiError) {
-      return { success: false, data: null, error: error.problemDetail };
-    }
-    return {
-      success: false,
-      data: null,
-      error: {
-        type: "https://api.example.com/errors/INTERNAL_ERROR",
-        title: "서버 내부 오류",
-        status: 500,
-        detail: "주문 상세 조회 중 오류가 발생했습니다.",
-        errorCode: "INTERNAL_ERROR",
-      },
-    };
-  }
-}
 
 // ============================================================================
 // 🔹 주문 취소 액션

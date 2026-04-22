@@ -1,4 +1,5 @@
 // e2e/mock-server/lib/mock-order-data.ts
+import { ORDER_SEEDS_ARRAY } from "./mock-order-seeds";
 import { MOCK_USERS, MockUser } from "./mock-user-data";
 
 // ============================================================================
@@ -184,26 +185,10 @@ export const OrderStore = {
 export const initOrders = () => {
     OrderStore.reset();
 
-    // 테스트용 샘플 주문 2 개 생성
-    if (MOCK_USERS.BUYER && MOCK_USERS.SELLER) {
-        OrderStore.create(
-            MOCK_USERS.BUYER.id,
-            "서울특별시 강남구 테헤란로 123",
-            [{ productId: 101, quantity: 1 }, { productId: 102, quantity: 2 }],
-        );
+    orderCounter.current = 1000;
 
-        const paidOrder = OrderStore.create(
-            MOCK_USERS.BUYER.id,
-            "부산광역시 해운대구 마린시티 456",
-            [{ productId: 103, quantity: 1 }],
-            "paymentkey_test_12345",
-        );
-        OrderStore.updateStatus(paidOrder.orderNumber, {
-            paymentStatus: "PAID",
-            delivery: {
-                deliveryAddress: paidOrder.delivery.deliveryAddress,
-                trackingNumber: "TRK-TEST-001",
-            },
-        });
-    }
+  // 2. Seed 데이터 직접 Map 에 삽입 (orderNumber 충돌 방지)
+  ORDER_SEEDS_ARRAY.forEach((order) => {
+    orders.set(order.orderNumber, order as Order);
+  });
 };

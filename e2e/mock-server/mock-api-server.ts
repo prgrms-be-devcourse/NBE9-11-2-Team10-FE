@@ -17,7 +17,7 @@ import { StoreProfileStore } from "./lib/mock-store-profile-data";
 import { ProductStore } from "./lib/mock-product-data";
 import { CommentStore, FeedStore } from "./lib/mock-feed-data";
 import { FeaturedProductStore } from "./lib/mock-featured-product";
-import { OrderStore } from "./lib/mock-order-data";
+import { initOrders } from "./lib/mock-order-data";
 
 const app = express();
 const PORT = process.env.MOCK_PORT || 4000;
@@ -75,7 +75,7 @@ app.post("/api/v1/__reset", (req: Request, res: Response) => {
     FeedStore.reset();
     CommentStore.reset();
     FeaturedProductStore.reset();
-    OrderStore.reset();
+    initOrders();
     
     console.log("[MOCK RESET] All stores have been reset at", new Date().toISOString());
     

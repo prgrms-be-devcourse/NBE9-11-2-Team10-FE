@@ -236,9 +236,9 @@ router.get("/seller", mockSellerMiddleware, (req: Request, res: Response) => {
 });
 
 // ============================================================================
-// 🔹 GET /api/v1/orders/{userId}/{orderNumber} - 주문 상세 조회
+// 🔹 GET /api/v1/orders/{orderNumber} - 주문 상세 조회
 // ============================================================================
-router.get("/:userId/:orderNumber", mockAuthMiddleware, (req: Request, res: Response) => {
+router.get("/:orderNumber", mockAuthMiddleware, (req: Request, res: Response) => {
   const user = req.mockUser!;
   const orderNumber = extractId(req.params.orderNumber);
 

@@ -15,6 +15,10 @@ import {
     OrderDetailResponse,
     BuyerOrdersResponse,
     SellerOrdersResponse,
+    BuyerOrdersData,
+    SellerOrdersData,
+    OrderDetailData,
+    OrderDetailResponseWrapper,
   } from "@/types/order";
 import { getForwardedHeaders, handleApiError } from "@/utils/helper";
 import { OrderApiError } from "@/utils/error/orders.error";
@@ -121,7 +125,7 @@ export async function confirmOrder(
 // ============================================================================
 export async function fetchBuyerOrders(
   mockUserId?: string,
-): Promise<BuyerOrdersResponse> {
+): Promise<BuyerOrdersData> {
 
   const headers = await getForwardedHeaders(
     mockUserId && process.env.NODE_ENV === "test"
@@ -134,8 +138,7 @@ export async function fetchBuyerOrders(
     {
       method: "GET",
       headers,
-      cache: "no-store",
-      next: { tags: [ORDER_CACHE_TAG] }, // ✅ ISR 캐시 태그 적용
+      cache: "no-store"
     },
   );
 
@@ -144,7 +147,19 @@ export async function fetchBuyerOrders(
     throw OrderApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<BuyerOrdersResponse>;
+  const wrapper = await response.json() as BuyerOrdersResponse;
+  
+  if (!wrapper.success) {
+    throw new OrderApiError({
+      type: "https://api.example.com/errors/API_ERROR",
+      title: "API 응답 오류",
+      status: wrapper.error?.status || 500,
+      detail: wrapper.error?.message || "알 수 없는 오류",
+      errorCode: wrapper.error?.code || "UNKNOWN_ERROR",
+    });
+  }
+  
+  return wrapper.data;
 }
 
 // ============================================================================
@@ -152,7 +167,7 @@ export async function fetchBuyerOrders(
 // ============================================================================
 export async function fetchSellerOrders(
   mockUserId?: string,
-): Promise<SellerOrdersResponse> {
+): Promise<SellerOrdersData> {
   const headers = await getForwardedHeaders(
     mockUserId && process.env.NODE_ENV === "test"
       ? { "X-Mock-User-Id": mockUserId, "X-E2E-User-Id": mockUserId }
@@ -164,8 +179,7 @@ export async function fetchSellerOrders(
     {
       method: "GET",
       headers,
-      cache: "no-store",
-      next: { tags: [ORDER_CACHE_TAG] },
+      cache: "no-store"
     },
   );
 
@@ -174,7 +188,20 @@ export async function fetchSellerOrders(
     throw OrderApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<SellerOrdersResponse>;
+  // ✅ 래퍼에서 실제 데이터 추출
+  const wrapper = await response.json() as SellerOrdersResponse;
+  
+  if (!wrapper.success) {
+    throw new OrderApiError({
+      type: "https://api.example.com/errors/API_ERROR",
+      title: "API 응답 오류",
+      status: wrapper.error?.status || 500,
+      detail: wrapper.error?.message || "알 수 없는 오류",
+      errorCode: wrapper.error?.code || "UNKNOWN_ERROR",
+    });
+  }
+  
+  return wrapper.data;
 }
 
 // ============================================================================
@@ -183,7 +210,7 @@ export async function fetchSellerOrders(
 export async function fetchOrderDetail(
   orderNumber: string,
   mockUserId?: string,
-): Promise<OrderDetailResponse> {
+): Promise<OrderDetailData> {
   const headers = await getForwardedHeaders(
     mockUserId && process.env.NODE_ENV === "test"
       ? { "X-Mock-User-Id": mockUserId, "X-E2E-User-Id": mockUserId }
@@ -195,8 +222,7 @@ export async function fetchOrderDetail(
     {
       method: "GET",
       headers,
-      cache: "no-store",
-      next: { tags: [ORDER_CACHE_TAG] },
+      cache: "no-store"
     },
   );
 
@@ -205,7 +231,20 @@ export async function fetchOrderDetail(
     throw OrderApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<OrderDetailResponse>;
+  // ✅ 래퍼에서 실제 데이터 추출
+  const wrapper = await response.json() as OrderDetailResponseWrapper;
+  
+  if (!wrapper.success) {
+    throw new OrderApiError({
+      type: "https://api.example.com/errors/API_ERROR",
+      title: "API 응답 오류",
+      status: wrapper.error?.status || 500,
+      detail: wrapper.error?.message || "알 수 없는 오류",
+      errorCode: wrapper.error?.code || "UNKNOWN_ERROR",
+    });
+  }
+  
+  return wrapper.data;
 }
 
 // ============================================================================
