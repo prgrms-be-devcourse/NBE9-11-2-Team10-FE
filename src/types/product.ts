@@ -10,6 +10,7 @@ export interface Product {
   description?: string;
   price: number;
   stock: number;
+  nickname: string;
   type: ProductType;
   imageUrl?: string | null;
   status: ProductStatus;
@@ -22,6 +23,7 @@ export interface ProductSummary {
   productId: number;
   productName: string;
   price: number;
+  nickname: string;
   imageUrl?: string | null;
   type: ProductType;
   status: PublicStatus;

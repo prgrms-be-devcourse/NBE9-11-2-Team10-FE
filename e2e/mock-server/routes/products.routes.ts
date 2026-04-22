@@ -67,11 +67,14 @@ router.get("/", (req: Request, res: Response) => {
     const paginated = result.slice(startIndex, startIndex + pageSize);
 
     return res.status(200).json({
-      content: paginated,
-      page: pageNum,
-      size: pageSize,
-      totalElements: result.length,
-      totalPages: Math.ceil(result.length / pageSize),
+      success: true,
+      data: {
+        content: paginated,
+        page: pageNum,
+        size: pageSize,
+        totalElements: result.length,
+        totalPages: Math.ceil(result.length / pageSize),
+      }
     });
   } catch (error) {
     console.error("[GET /products] Error:", error);
@@ -120,14 +123,10 @@ router.get("/:productId", (req: Request, res: Response) => {
   }
 
   return res.status(200).json({
-    productId: product.productId,
-    productName: product.productName,
-    description: product.description,
-    price: product.price,
-    stock: product.stock,
-    imageUrl: product.imageUrl,
-    type: product.type,
-    status: product.status,
+    success:true,
+    data: {
+      ...product
+    }
   });
 });
 

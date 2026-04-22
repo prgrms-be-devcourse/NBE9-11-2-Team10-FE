@@ -24,7 +24,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   // ✅ 데이터 조회
   const result = await fetchProductDetail(productId);
-
+  
   // ❌ 에러 처리
   if (!result.success) {
     if (result.status === 404) notFound();
@@ -118,9 +118,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
 
             {/* 상품명 & 가격 */}
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 leading-tight">
-              {product.productName}
-            </h1>
+            <div className="mb-4">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
+                {product.productName}
+              </h1>
+
+              <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                <span className="px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600">
+                  ✍️작가님: {product.nickname} 
+                </span>
+              </div>
+            </div>
+
             <p className="text-3xl font-bold text-blue-600 mb-6">
               {product.price.toLocaleString()}원
             </p>
