@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:clean": "rm -rf .next && next build",
     "start": "next start",
     "lint": "eslint",
     "test:e2e": "bash scripts/run-e2e.sh",
@@ -33,6 +34,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^20",
+    "@types/qs": "^6.15.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "cookie-parser": "^1.4.7",
@@ -42,6 +44,7 @@
     "eslint-config-next": "16.2.3",
     "express": "^5.2.1",
     "msw": "^2.13.3",
+    "qs": "^6.15.1",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"

@@ -65,7 +65,7 @@ export const mockAuthMiddleware = (
         createErrorResponse(
           401,
           "AUTH_REQUIRED",
-          "인증이 필요합니다.",
+          "로그인 후 사용할 수 있습니다.",
           req.path,
         ),
       );
@@ -165,7 +165,7 @@ export const verifyOwnership = (
         createErrorResponse(
           401,
           "AUTH_REQUIRED",
-          "인증이 필요합니다.",
+          "로그인 후 사용할 수 있습니다.",
           resourcePath,
         ),
       );

@@ -71,6 +71,7 @@ export const productListQuerySchema = z.object({
   size: z.coerce.number().int().min(1).max(100).default(10),
   type: productTypeSchema.optional(),
   status: publicStatusSchema.optional(),
+  sellerId: z.coerce.number().int().optional(),
 });
 
 export type ProductListQuery = z.infer<typeof productListQuerySchema>;
