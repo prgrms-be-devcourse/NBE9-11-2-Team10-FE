@@ -32,6 +32,7 @@ export function CommentList({
 
   // ✅ 새 댓글 추가 시 목록에 반영
   const handleCommentAdded = (newComment: CommentResponse) => {
+    console.log(newComment);
     setLocalComments((prev) => [newComment, ...prev]);
   };
 

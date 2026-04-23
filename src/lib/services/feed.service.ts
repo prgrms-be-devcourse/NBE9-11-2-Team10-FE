@@ -318,12 +318,17 @@ export async function toggleFeedLike(
 // 🔹 POST /api/v1/stores/{sellerId}/feeds/{feedId}/comments - 댓글 생성
 // ============================================================================
 
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+};
+
 export async function createComment(
   sellerId: string,
   feedId: string,
   input: CreateCommentInput,
   mockUserId?: string,
-): Promise<CommentResponse> {
+): Promise<Promise<ApiResponse<CommentResponse>>> {
   // 1. 스키마 검증
   const validated = createCommentSchema.safeParse(input);
   if (!validated.success) {
@@ -365,7 +370,7 @@ export async function createComment(
     throw ApiError.fromProblemDetail(error);
   }
 
-  const data = await response.json() as CommentResponse;
+  const data = await response.json() as ApiResponse<CommentResponse>;
 
   return data;
 }
