@@ -18,16 +18,9 @@ export default function FailPaymentClient({
   // 에러 코드별 메시지 매핑
   const getErrorMessage = (code: string | null, message: string | null) => {
     const errorMessages: Record<string, string> = {
-      PAYMENT_PROCESS_CANCELED: "결제가 취소되었습니다.",
-      CARD_PROCESS_FAILED: "카드 결제에 실패했습니다. 다른 카드를 사용해주세요.",
-      INVALID_PAYMENT: "유효하지 않은 결제 정보입니다.",
-      REJECT_CARD_COMPANY: "카드사에서 결제를 거절했습니다.",
-      STOPPED_CARD: "정지된 카드입니다.",
-      EXPIRED_CARD: "유효기간이 만료된 카드입니다.",
-      OVER_LIMIT: "한도 초과로 결제가 불가능합니다.",
-      PASSWORD_ERROR: "비밀번호가 일치하지 않습니다.",
-      SUSPECT_UNAUTHORIZED: "부정 거래가 의심됩니다.",
-      TEMPORARY_ERROR: "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      PAYMENT_PROCESS_CANCELED: "사용자에 의해 결제가 취소되었습니다.",
+      PAY_PROCESS_ABORTED: "결제 진행 중 승인에 실패하여 결제가 중단되었습니다.",
+      REJECT_CARD_COMPANY: "결제 승인이 거절되었습니다."
     };
 
     return message || errorMessages[code || ""] || "결제 처리 중 오류가 발생했습니다.";

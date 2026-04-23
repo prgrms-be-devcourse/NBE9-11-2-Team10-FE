@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Script from "next/script";
 import type { TossPaymentsSDK, PaymentInstance, TossPaymentRequestOptions } from "@/types/tosspayments";
 
@@ -17,7 +16,7 @@ interface PaymentPageClientProps {
 }
 
 // ------ 상수 ------
-const TOSS_CLIENT_KEY = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY || "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq";
+const TOSS_CLIENT_KEY = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY || "";
 const TOSS_CUSTOMER_KEY = process.env.NEXT_PUBLIC_TOSS_CUSTOMER_KEY || "";
 
 export default function PaymentPageClient({
@@ -30,7 +29,6 @@ export default function PaymentPageClient({
   orderItems,
   deliveryAddress,
 }: PaymentPageClientProps) {
-  const router = useRouter();
   const [isSdkLoaded, setIsSdkLoaded] = useState(false);
   const [isRequesting, setIsRequesting] = useState(false);
   const [error, setError] = useState<string | null>(null);
