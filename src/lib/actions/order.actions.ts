@@ -3,7 +3,6 @@
 import {
   CreateOrderRequest,
   ConfirmOrderRequest,
-  CancelOrderRequest,
   createOrderSchema,
 } from "@/schemas/order.schema";
 import {
@@ -23,7 +22,6 @@ import {
   fetchBuyerOrders,
   fetchSellerOrders,
   fetchOrderDetail,
-  cancelOrder,
 } from "@/lib/services/order.service";
 import { OrderApiError } from "@/utils/error/orders.error";
 import { ProblemDetailError } from "@/types/common";
@@ -188,34 +186,6 @@ export async function confirmOrderAction(
         title: "서버 내부 오류",
         status: 500,
         detail: "결제 확인 중 예상치 못한 오류가 발생했습니다.",
-        errorCode: "INTERNAL_ERROR",
-      },
-    };
-  }
-}
-
-
-// ============================================================================
-// 🔹 주문 취소 액션
-// ============================================================================
-export async function cancelOrderAction(
-  orderNumber: string,
-): Promise<ActionResponse<CreateOrderResponse>> {
-  try {
-    const result = await cancelOrder(orderNumber);
-    return { success: true, data: result, error: null };
-  } catch (error) {
-    if (error instanceof OrderApiError) {
-      return { success: false, data: null, error: error.problemDetail };
-    }
-    return {
-      success: false,
-      data: null,
-      error: {
-        type: "https://api.example.com/errors/INTERNAL_ERROR",
-        title: "서버 내부 오류",
-        status: 500,
-        detail: "주문 취소 중 오류가 발생했습니다.",
         errorCode: "INTERNAL_ERROR",
       },
     };

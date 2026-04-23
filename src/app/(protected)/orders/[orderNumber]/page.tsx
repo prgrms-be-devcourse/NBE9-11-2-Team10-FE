@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ProblemDetailError } from "@/types/common";
 import { fetchOrderDetail } from "@/lib/services/order.service";
 import { OrderApiError } from "@/utils/error/orders.error";
-import { CancelOrderForm } from "@/components/order/CancelOrderForm";
 
 // 주문 상품 테이블 컴포넌트
 function OrderItemTable({ items }: { items: any[] }) {
@@ -208,12 +207,7 @@ export default async function OrderDetailPage(props: OrderDetailPageProps) {
             </span>
           </div>
         </div>
-
-        {/* 취소 버튼 (PAID 상태일 때만) */}
-        {order.paymentStatus === "PAID" && !order.delivery.trackingNumber && (
-          <CancelOrderForm orderNumber={order.orderNumber} />
-        )}
-
+        
         {/* 배송 중일 경우 안내 */}
         {order.paymentStatus === "PAID" && order.delivery.trackingNumber && (
           <div 

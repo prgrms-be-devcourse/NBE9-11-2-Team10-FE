@@ -41,15 +41,6 @@ export const confirmOrderSchema = z.object({
 export type ConfirmOrderRequest = z.infer<typeof confirmOrderSchema>;
 
 // ============================================================================
-// 🔹 주문 취소 요청 스키마
-// ============================================================================
-export const cancelOrderSchema = z.object({
-  orderNumber: z.string().min(1, "주문 번호는 필수입니다."),
-});
-
-export type CancelOrderRequest = z.infer<typeof cancelOrderSchema>;
-
-// ============================================================================
 // 🔹 주문 조회 쿼리 스키마
 // ============================================================================
 export const orderQuerySchema = z.object({

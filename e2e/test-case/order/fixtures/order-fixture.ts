@@ -74,8 +74,6 @@ export const test = base.extend<{
       page: Page,
       expected: Partial<OrderDetail>,
     ) => Promise<void>;
-    // 🔹 주문 취소 실행 (대화상자 처리 포함)
-    cancelOrder: (page: Page, orderNumber: string, confirm?: boolean) => Promise<void>;
     // 🔹 Mock 주문 데이터 초기화
     resetMockOrders: () => Promise<void>;
     // 🔹 주문 생성 (Mock 서버 직접 호출 - 테스트 데이터 준비용)
@@ -192,28 +190,6 @@ export const test = base.extend<{
             );
           }
         }
-      },
-
-      // 🔹 주문 취소 실행
-      cancelOrder: async (page: Page, orderNumber: string, confirm: boolean = true) => {
-        await helpers.goToBuyerOrderDetail(orderNumber);
-
-        const cancelButton = page.getByTestId("cancel-order-button");
-        await expect(cancelButton).toBeVisible();
-        await expect(cancelButton).toBeEnabled();
-
-        // 대화상자 핸들링
-        page.once("dialog", async (dialog) => {
-          expect(dialog.message()).toContain("주문을 취소하시겠습니까?");
-          if (confirm) {
-            await dialog.accept();
-          } else {
-            await dialog.dismiss();
-          }
-        });
-
-        await cancelButton.click();
-        await page.waitForLoadState("networkidle");
       },
 
       // 🔹 Mock 주문 데이터 초기화

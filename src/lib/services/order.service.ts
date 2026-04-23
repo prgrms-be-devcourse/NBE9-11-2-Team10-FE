@@ -4,10 +4,8 @@ import { revalidateTag } from "next/cache";
 import {
   CreateOrderRequest,
   ConfirmOrderRequest,
-  CancelOrderRequest,
   createOrderSchema,
   confirmOrderSchema,
-  cancelOrderSchema,
 } from "@/schemas/order.schema";
 import {
     CreateOrderResponse,
@@ -282,37 +280,4 @@ export async function fetchOrderDetail(
   }
   
   return wrapper.data;
-}
-
-// ============================================================================
-// 🔹 DELETE /api/v1/orders/{orderNumber} - 주문 취소
-// ============================================================================
-export async function cancelOrder(
-  orderNumber: string,
-  mockUserId?: string,
-): Promise<CreateOrderResponse> {
-  const headers = await getForwardedHeaders(
-    mockUserId && process.env.NODE_ENV === "test"
-      ? { "X-Mock-User-Id": mockUserId, "X-E2E-User-Id": mockUserId }
-      : undefined,
-  );
-
-  const response = await fetch(
-    `${API_BASE_URL}/api/v1/orders/${orderNumber}`,
-    {
-      method: "DELETE",
-      headers,
-      cache: "no-store",
-    },
-  );
-
-  if (!response.ok) {
-    const error = await handleApiError(response);
-    throw OrderApiError.fromProblemDetail(error);
-  }
-
-  // ✅ 주문 취소 시 캐시 무효화
-  revalidateTag(ORDER_CACHE_TAG, "max");
-
-  return response.json() as Promise<CreateOrderResponse>;
 }
