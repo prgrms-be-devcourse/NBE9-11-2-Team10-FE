@@ -23,6 +23,7 @@ import {
   fetchOrderProductInfo,
 } from "../lib/mock-order-validation";
 import { MOCK_USERS } from "../lib/mock-user-data";
+import { PaymentScenarioStore } from "../lib/mock-payment-scenario";
 
 export const router = Router();
 
@@ -73,59 +74,69 @@ router.post("/", mockAuthMiddleware, (req: Request, res: Response) => {
   }
 });
 
-// ============================================================================
 // 🔹 POST /api/v1/orders/confirm - 결제 확인 (토스 연동)
-// ============================================================================
+// ✅ 기존 두 개의 핸들러를 하나로 통합
 router.post("/confirm", mockAuthMiddleware, (req: Request, res: Response) => {
+  const { paymentKey, orderId, amount } = req.body as ConfirmOrderRequest;
+
+  // ✅ [1순위] E2E 테스트 시나리오 확인 (공유 상태 참조)
+  const testScenario = PaymentScenarioStore.get();
+  
+  if (testScenario) {
+    const scenarios: Record<string, { status: number; code?: string; message?: string }> = {
+      "SUCCESS": { status: 200 },
+      "REJECT_CARD_PAYMENT": { status: 403, code: "REJECT_CARD_PAYMENT", message: "한도초과 혹은 잔액부족으로 결제에 실패했습니다." },
+      "REJECT_CARD_COMPANY": { status: 403, code: "REJECT_CARD_COMPANY", message: "결제 승인이 거절되었습니다." },
+      "INVALID_REQUEST": { status: 400, code: "INVALID_REQUEST", message: "잘못된 요청입니다." },
+      "NETWORK_ERROR_FINAL_FAILED": { status: 503, code: "NETWORK_ERROR_FINAL_FAILED", message: "결제 결과를 확인할 수 없습니다." },
+      // ... 기타 시나리오 필요시 추가
+    };
+
+    const config = scenarios[testScenario];
+    if (config) {
+      if (config.status === 200) {
+        // ✅ SUCCESS: 주문 조회 없이 바로 성공 응답 (테스트용)
+        return res.status(200).json({ paymentKey, orderId, status: "DONE" });
+      } else {
+        // ❌ 실패 시나리오
+        return res.status(config.status).json(
+          createErrorResponse(config.status, config.code!, config.message!, "/api/v1/orders/confirm"),
+        );
+      }
+    }
+    // 시나리오가 매칭되지 않으면 아래 일반 로직으로 진행
+  }
+
+  // ============================================================================
+  // ✅ 일반 로직 (프로덕션/테스트 공통)
+  // ============================================================================
+  
   // 1. 요청값 검증
   const validationError = validateConfirmOrder(req.body, "/api/v1/orders/confirm");
   if (validationError) {
     return res.status(400).json(validationError);
   }
 
-  const { paymentKey, orderId, amount } = req.body as ConfirmOrderRequest;
-
   // 2. 주문 조회
   const order = OrderStore.findByOrderNumber(orderId);
   if (!order) {
-    return res
-      .status(404)
-      .json(
-        createErrorResponse(
-          404,
-          "ORDER_NOT_FOUND",
-          "주문 내역을 찾을 수 없습니다.",
-          "/api/v1/orders/confirm",
-        ),
-      );
+    return res.status(404).json(
+      createErrorResponse(404, "ORDER_NOT_FOUND", "주문 내역을 찾을 수 없습니다.", "/api/v1/orders/confirm"),
+    );
   }
 
-  // 3. 금액 일치 여부 검증 (위변조 방지)
+  // 3. 금액 일치 여부 검증
   if (order.totalAmount !== amount) {
-    return res
-      .status(400)
-      .json(
-        createErrorResponse(
-          400,
-          "AMOUNT_MISMATCH",
-          `결제 금액이 일치하지 않습니다. 위변조 위험이 있습니다.`,
-          "/api/v1/orders/confirm",
-        ),
-      );
+    return res.status(400).json(
+      createErrorResponse(400, "AMOUNT_MISMATCH", `결제 금액이 일치하지 않습니다.`, "/api/v1/orders/confirm"),
+    );
   }
 
   // 4. 중복 결제 방지
   if (order.paymentStatus !== "READY") {
-    return res
-      .status(409)
-      .json(
-        createErrorResponse(
-          409,
-          "DUPLICATE_REQUEST",
-          "이미 처리 중인 결제입니다.",
-          "/api/v1/orders/confirm",
-        ),
-      );
+    return res.status(409).json(
+      createErrorResponse(409, "DUPLICATE_REQUEST", "이미 처리 중인 결제입니다.", "/api/v1/orders/confirm"),
+    );
   }
 
   try {
@@ -133,17 +144,13 @@ router.post("/confirm", mockAuthMiddleware, (req: Request, res: Response) => {
     const updatedOrder = OrderStore.updateStatus(orderId, {
       paymentStatus: "PAID",
       paymentKey,
-      delivery: {
-        ...order.delivery,
-        trackingNumber: `TRK-${Date.now()}`,
-      },
+      delivery: { ...order.delivery, trackingNumber: `TRK-${Date.now()}` },
     });
 
     if (!updatedOrder) {
       throw new Error("Failed to update order status");
     }
 
-    // 6. 응답 반환
     return res.status(200).json({
       paymentKey,
       orderId,
@@ -151,16 +158,9 @@ router.post("/confirm", mockAuthMiddleware, (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("[ERROR] Payment confirmation failed:", error);
-    return res
-      .status(500)
-      .json(
-        createErrorResponse(
-          500,
-          "INTERNAL_ERROR",
-          "결제 확인 중 서버 오류가 발생했습니다.",
-          "/api/v1/orders/confirm",
-        ),
-      );
+    return res.status(500).json(
+      createErrorResponse(500, "INTERNAL_ERROR", "결제 확인 중 서버 오류가 발생했습니다.", "/api/v1/orders/confirm"),
+    );
   }
 });
 
@@ -369,110 +369,6 @@ router.delete("/:orderNumber", mockAuthMiddleware, (req: Request, res: Response)
         ),
       );
   }
-});
-
-// ============================================================================
-// 🔹 [E2E 전용] 토스 외부 API 예외 시나리오 트리거
-// ============================================================================
-// 테스트 시 헤더로 시나리오 지정: X-Mock-Payment-Scenario: {errorCode}
-router.post("/confirm", mockAuthMiddleware, (req: Request, res: Response) => {
-  const scenario = req.headers["x-mock-payment-scenario"] as string;
-  
-  if (scenario) {
-    // 토스 외부 API 예외 코드 매핑
-    const scenarios: Record<string, { status: number; code: string; message: string }> = {
-      "NOT_FOUND_PAYMENT": {
-        status: 404,
-        code: "NOT_FOUND_PAYMENT",
-        message: "존재하지 않는 결제 정보 입니다.",
-      },
-      "NOT_FOUND_PAYMENT_SESSION": {
-        status: 404,
-        code: "NOT_FOUND_PAYMENT_SESSION",
-        message: "결제 시간이 만료되어 결제 진행 데이터가 존재하지 않습니다.",
-      },
-      "REJECT_ACCOUNT_PAYMENT": {
-        status: 403,
-        code: "REJECT_ACCOUNT_PAYMENT",
-        message: "잔액부족으로 결제에 실패했습니다.",
-      },
-      "REJECT_CARD_PAYMENT": {
-        status: 403,
-        code: "REJECT_CARD_PAYMENT",
-        message: "한도초과 혹은 잔액부족으로 결제에 실패했습니다.",
-      },
-      "REJECT_CARD_COMPANY": {
-        status: 403,
-        code: "REJECT_CARD_COMPANY",
-        message: "결제 승인이 거절되었습니다.",
-      },
-      "FORBIDDEN_REQUEST": {
-        status: 403,
-        code: "FORBIDDEN_REQUEST",
-        message: "허용되지 않은 요청입니다.",
-      },
-      "INVALID_PASSWORD": {
-        status: 403,
-        code: "INVALID_PASSWORD",
-        message: "결제 비밀번호가 일치하지 않습니다.",
-      },
-      "ALREADY_PROCESSED_PAYMENT": {
-        status: 400,
-        code: "ALREADY_PROCESSED_PAYMENT",
-        message: "이미 처리된 결제 입니다.",
-      },
-      "INVALID_REQUEST": {
-        status: 400,
-        code: "INVALID_REQUEST",
-        message: "잘못된 요청입니다.",
-      },
-      "INVALID_API_KEY": {
-        status: 400,
-        code: "INVALID_API_KEY",
-        message: "잘못된 시크릿키 연동 정보 입니다.",
-      },
-      "FAILED_PAYMENT_INTERNAL_SYSTEM_PROCESSING": {
-        status: 500,
-        code: "FAILED_PAYMENT_INTERNAL_SYSTEM_PROCESSING",
-        message: "결제가 완료되지 않았어요. 다시 시도해주세요.",
-      },
-      "UNKNOWN_PAYMENT_ERROR": {
-        status: 500,
-        code: "UNKNOWN_PAYMENT_ERROR",
-        message: "내부 시스템 처리 작업이 실패했습니다. 잠시 후 다시 시도해주세요",
-      },
-      "NETWORK_ERROR_FINAL_FAILED": {
-        status: 503,
-        code: "NETWORK_ERROR_FINAL_FAILED",
-        message: "결제 결과를 확인할 수 없습니다. 중복 결제를 방지하기 위해 잠시 후 결제 내역을 확인해 주세요.",
-      },
-    };
-
-    const scenarioConfig = scenarios[scenario];
-    if (scenarioConfig) {
-      return res.status(scenarioConfig.status).json(
-        createErrorResponse(
-          scenarioConfig.status,
-          scenarioConfig.code,
-          scenarioConfig.message,
-          "/api/v1/orders/confirm",
-        ),
-      );
-    }
-  }
-
-  // 시나리오 헤더가 없으면 기본 로직 실행 (위 코드와 중복되므로 실제 구현 시 통합 필요)
-  // 여기서는 간소화를 위해 기본 로직 생략하고 에러 반환
-  return res
-    .status(400)
-    .json(
-      createErrorResponse(
-        400,
-        "INVALID_SCENARIO",
-        "지원하지 않는 테스트 시나리오입니다.",
-        "/api/v1/orders/confirm",
-      ),
-    );
 });
 
 // 서버 부팅 시 초기 데이터 로드

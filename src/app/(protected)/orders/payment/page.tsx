@@ -9,6 +9,7 @@ interface PageProps {
     name?: string;
     phone?: string;
     email?: string;
+    testMode?: string;
   }>;
 }
 
@@ -17,6 +18,15 @@ export default async function PaymentPage({ searchParams }: PageProps) {
 
   if (!params.orderId || !params.amount || !params.name || !params.phone || !params.email) {
     return <div className="text-center py-20 text-red-600">결제 정보가 누락되었습니다.</div>;
+  }
+
+  // ✅ [E2E 전용] 테스트 모드: 토스페이먼트 스킵하고 바로 확인 페이지로
+  if (params.testMode === "skip-toss" && process.env.NODE_ENV !== "production") {
+    const mockPaymentKey = `pay_test_e2e_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    
+    redirect(
+      `/orders/payment/confirm?paymentKey=${mockPaymentKey}&orderId=${params.orderId}&amount=${params.amount}`
+    );
   }
 
   const orderId = params.orderId;

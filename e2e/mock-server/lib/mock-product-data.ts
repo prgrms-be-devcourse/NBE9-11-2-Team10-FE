@@ -80,6 +80,21 @@ let products: Product[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
+  // ✅ [E2E 전용] 결제 테스트용 상품
+  {
+    productId: 999, // 충돌 방지를 위해 높은 값 사용
+    productName: "[E2E-TEST] 결제 테스트 상품",
+    description: "자동화된 결제 테스트를 위한 전용 상품입니다. 실제 판매되지 않습니다.",
+    price: 1000, // 테스트용 소액
+    stock: 9999, // 재고 무한
+    type: "EBOOK",
+    imageUrl: null,
+    status: "SELLING",
+    nickname: MOCK_USERS.SELLER.nickname,
+    sellerId: MOCK_USERS.SELLER.id,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 let nextId = Math.max(...products.map((p) => p.productId)) + 1;
@@ -186,6 +201,21 @@ export const ProductStore = {
         type: "EBOOK",
         imageUrl: null,
         status: "SOLD_OUT",
+        nickname: MOCK_USERS.SELLER.nickname,
+        sellerId: MOCK_USERS.SELLER.id,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      // ✅ [E2E 전용] 결제 테스트용 상품
+      {
+        productId: 999, // 충돌 방지를 위해 높은 값 사용
+        productName: "[E2E-TEST] 결제 테스트 상품",
+        description: "자동화된 결제 테스트를 위한 전용 상품입니다. 실제 판매되지 않습니다.",
+        price: 1000, // 테스트용 소액
+        stock: 9999, // 재고 무한
+        type: "EBOOK",
+        imageUrl: null,
+        status: "SELLING",
         nickname: MOCK_USERS.SELLER.nickname,
         sellerId: MOCK_USERS.SELLER.id,
         createdAt: new Date().toISOString(),

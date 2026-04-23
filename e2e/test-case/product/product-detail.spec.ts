@@ -3,6 +3,9 @@ import { test, expect } from "./fixtures/product-fixture";
 import { MOCK_PRODUCTS } from "./fixtures/product-fixture";
 
 test.describe("🔍 상품 상세 페이지", () => {
+  test.beforeEach(async ({ productHelpers }) => {
+    await productHelpers.resetMockProducts();
+  });
   // 🔹 기본 로딩: 유효한 상품 ID
   test("유효한 상품 ID 로 상세 페이지 로딩", async ({
     page,

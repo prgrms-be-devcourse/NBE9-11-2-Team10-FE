@@ -18,6 +18,7 @@ import { ProductStore } from "./lib/mock-product-data";
 import { CommentStore, FeedStore } from "./lib/mock-feed-data";
 import { FeaturedProductStore } from "./lib/mock-featured-product";
 import { initOrders } from "./lib/mock-order-data";
+import { PaymentScenarioStore } from "./lib/mock-payment-scenario";
 
 const app = express();
 const PORT = process.env.MOCK_PORT || 4000;
@@ -65,7 +66,7 @@ app.use("/api/v1/stores", storeProfileRoutes);
 app.use("/api/v1/stores", storeFeedsRoutes);
 app.use("/api/v1/sellers", sellerRoutes);
 app.use("/api/v1/orders", orderRoutes); 
-app.use("/api/v1/__debug", debugRoutes); // 인증 쿠키 테스트 용 (e2e 전용)
+app.use("/api/v1/__debug", debugRoutes); // e2e 전용 테스트 라우터
 
 app.post("/api/v1/__reset", (req: Request, res: Response) => {
   try {
@@ -76,6 +77,7 @@ app.post("/api/v1/__reset", (req: Request, res: Response) => {
     CommentStore.reset();
     FeaturedProductStore.reset();
     initOrders();
+    PaymentScenarioStore.reset();
     
     console.log("[MOCK RESET] All stores have been reset at", new Date().toISOString());
     
@@ -89,7 +91,8 @@ app.post("/api/v1/__reset", (req: Request, res: Response) => {
         "FeedStore",
         "CommentStore",
         "FeaturedProductStore",
-        "OrderStore"
+        "OrderStore",
+        "PaymentScenarioStore"
       ]
     });
   } catch (error) {
