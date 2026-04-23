@@ -34,8 +34,8 @@ export function FeedForm({
 
   // 폼 상태
   const [content, setContent] = useState(initialData?.content || "");
-  const [mediaUrls, setMediaUrls] = useState<string[]>(
-    initialData?.mediaUrls || [],
+  const [imageUrl, setImageUrl] = useState<string>(
+    initialData?.imageUrl || "",
   );
   const [isNotice, setIsNotice] = useState(initialData?.isNotice || false);
   const [newMediaUrl, setNewMediaUrl] = useState("");
@@ -43,7 +43,7 @@ export function FeedForm({
   // Zod 스키마 기반 검증
   const validate = (): { valid: boolean; errors?: Record<string, string> } => {
     const schema = createFeedSchema;
-    const result = schema.safeParse({ content, mediaUrls, isNotice });
+    const result = schema.safeParse({ content, imageUrl, isNotice });
 
     if (!result.success) {
       const errors: Record<string, string> = {};
@@ -61,11 +61,8 @@ export function FeedForm({
     if (!newMediaUrl.trim()) return;
     try {
       new URL(newMediaUrl); // 유효한 URL 인지 확인
-      if (mediaUrls.length >= 10) {
-        setError("이미지/영상은 최대 10개까지 업로드 가능합니다.");
-        return;
-      }
-      setMediaUrls((prev) => [...prev, newMediaUrl.trim()]);
+    
+      setImageUrl(newMediaUrl.trim());
       setNewMediaUrl("");
       setError(null);
     } catch {
@@ -74,8 +71,8 @@ export function FeedForm({
   };
 
   // 미디어 URL 제거
-  const handleRemoveMediaUrl = (index: number) => {
-    setMediaUrls((prev) => prev.filter((_, i) => i !== index));
+  const handleRemoveMediaUrl = () => {
+    setImageUrl("");
   };
 
   // 폼 제출
@@ -94,7 +91,7 @@ export function FeedForm({
     try {
       const payload: CreateFeedInput | UpdateFeedInput = {
         content,
-        mediaUrls: mediaUrls.length > 0 ? mediaUrls : [],
+        imageUrl: imageUrl || null,
         isNotice,
       };
 
@@ -164,7 +161,7 @@ export function FeedForm({
       {/* 🖼️ 미디어 URL 관리 */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          미디어 URL (선택, 최대 10개)
+          미디어 URL (선택, 최대 1개)
         </label>
 
         {/* URL 입력 필드 */}
@@ -188,29 +185,22 @@ export function FeedForm({
         </div>
 
         {/* 업로드된 미디어 미리보기 */}
-        {mediaUrls.length > 0 && (
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-            {mediaUrls.map((url, idx) => (
-              <div
-                key={idx}
-                className="relative aspect-square rounded-md overflow-hidden bg-gray-100 group"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={url}
-                  alt={`Media ${idx + 1}`}
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveMediaUrl(idx)}
-                  className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                  aria-label="Remove media"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+        {imageUrl && (
+          <div className="relative w-full h-[220px] rounded-lg overflow-hidden border">
+
+            <img
+              src={imageUrl}
+              alt="preview"
+              className="w-full h-full object-cover"
+            />
+
+            <button
+              type="button"
+              onClick={handleRemoveMediaUrl}
+              className="absolute top-2 right-2 bg-red-500 text-white px-2"
+            >
+              삭제
+            </button>
           </div>
         )}
       </div>

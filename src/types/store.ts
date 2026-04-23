@@ -9,10 +9,12 @@ export interface BusinessInfo {
 }
 
 export interface QueriedStoreProfile {
-  name: string;
-  nickname: string;
-  imageUrl?: string | null;
-  bio?: string;
+  data: {
+    name: string;
+    nickname: string;
+    imageUrl?: string | null;
+    bio?: string;
+  }
 }
 
 export interface StoreProfileResponse {

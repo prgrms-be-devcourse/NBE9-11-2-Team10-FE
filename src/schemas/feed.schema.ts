@@ -21,11 +21,11 @@ export const createFeedSchema = z.object({
     .string()
     .min(1, "피드 내용은 1자 이상 입력해야 합니다.")
     .max(2000, "피드 내용은 2000자를 초과할 수 없습니다."),
-  mediaUrls: z
-    .array(z.url("유효한 URL 형식이 아닙니다."))
-    .max(10, "이미지/영상은 최대 10개까지 업로드 가능합니다.")
+    imageUrl: z
+    .string()
+    .url("유효한 URL 형식이 아닙니다.")
     .optional()
-    .default([]),
+    .nullable(),
   isNotice: z.boolean().optional().default(false),
 });
 

@@ -46,3 +46,25 @@ export async function logout(): Promise<{ message: string; invalidatedAt: string
 
   return response.json();
 }
+
+export interface RefreshResponse {
+  success: boolean;
+}
+
+export async function refresh(): Promise<RefreshResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include', // 🍪 refreshToken 쿠키 필수
+    cache: 'no-store',
+  });
+
+  console.log("Response :" + response);
+  if (!response.ok) {
+    throw new Error('토큰 재발급 실패');
+  }
+
+  return response.json();
+}

@@ -7,8 +7,13 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "example.com",
-        pathname: "/images/**",
+        hostname: "team10-images-dev-wuho-20260419.s3.us-east-1.amazonaws.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "search.pstatic.net",
+        pathname: "/**",
       },
     ],
   },

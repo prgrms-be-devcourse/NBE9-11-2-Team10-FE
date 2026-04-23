@@ -62,7 +62,9 @@ export async function fetchFeedList(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<FeedListResponse>;
+  const data = await response.json() as FeedListResponse;
+
+  return data;
 }
 // ============================================================================
 // 🔹 GET /api/v1/stores/{sellerId}/feeds/{feedId}/comments - 댓글 목록 조회
@@ -117,7 +119,9 @@ export async function fetchCommentList(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<CommentListResponse>;
+  const data = await response.json() as CommentListResponse;
+
+  return data;
 }
 
 // ============================================================================
@@ -142,7 +146,7 @@ export async function createFeed(
   // 2. 요청 데이터 구성
   const body: CreateFeedRequest = {
     content: validated.data.content,
-    mediaUrls: validated.data.mediaUrls,
+    imageUrl: validated.data.imageUrl || "",
     isNotice: validated.data.isNotice,
   };
 
@@ -168,7 +172,9 @@ export async function createFeed(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<CreateFeedResponse>;
+  const data = await response.json() as CreateFeedResponse;
+
+  return data;
 }
 
 // ============================================================================
@@ -197,7 +203,7 @@ export async function updateFeed(
 
   const body: CreateFeedRequest = {
     content: validated.data.content,
-    mediaUrls: validated.data.mediaUrls,
+    imageUrl: validated.data.imageUrl,
     isNotice: validated.data.isNotice,
   };
 
@@ -208,7 +214,7 @@ export async function updateFeed(
   );
 
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/stores/${sellerId}/feeds/${feedId}`,
+    `${API_BASE_URL}/api/v1/stores/me/feeds/${feedId}`,
     {
       method: "PATCH",
       headers: {
@@ -225,7 +231,9 @@ export async function updateFeed(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<CreateFeedResponse>;
+  const data = await response.json() as CreateFeedResponse;
+
+  return data;
 }
 
 // ============================================================================
@@ -301,19 +309,26 @@ export async function toggleFeedLike(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<FeedLikeToggleResponse>;
+  const data = await response.json() as FeedLikeToggleResponse;
+
+  return data;
 }
 
 // ============================================================================
 // 🔹 POST /api/v1/stores/{sellerId}/feeds/{feedId}/comments - 댓글 생성
 // ============================================================================
 
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+};
+
 export async function createComment(
   sellerId: string,
   feedId: string,
   input: CreateCommentInput,
   mockUserId?: string,
-): Promise<CommentResponse> {
+): Promise<Promise<ApiResponse<CommentResponse>>> {
   // 1. 스키마 검증
   const validated = createCommentSchema.safeParse(input);
   if (!validated.success) {
@@ -355,7 +370,9 @@ export async function createComment(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<CommentResponse>;
+  const data = await response.json() as ApiResponse<CommentResponse>;
+
+  return data;
 }
 
 // ============================================================================
@@ -446,5 +463,7 @@ export async function toggleCommentLike(
     throw ApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<CommentLikeToggleResponse>;
+  const data = await response.json() as CommentLikeToggleResponse;
+
+  return data;
 }

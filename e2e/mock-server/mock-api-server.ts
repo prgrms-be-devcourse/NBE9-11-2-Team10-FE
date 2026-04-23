@@ -12,6 +12,7 @@ import storeProfileRoutes from "./routes/store-profiles.routes";
 import storeFeedsRoutes from "./routes/store-feeds.routes";
 import sellerRoutes from "./routes/seller.routes";
 import orderRoutes from "./routes/orders.routes"; 
+import usersRoutes from "./routes/users.routes";
 import debugRoutes from "./routes/debug.routes";
 import { StoreProfileStore } from "./lib/mock-store-profile-data";
 import { ProductStore } from "./lib/mock-product-data";
@@ -65,6 +66,7 @@ app.use("/api/v1/stores/me/products", storeProductsRoutes); // 🏪 상품 관�
 app.use("/api/v1/stores", storeProfileRoutes);
 app.use("/api/v1/stores", storeFeedsRoutes);
 app.use("/api/v1/sellers", sellerRoutes);
+app.use("/api/v1", usersRoutes);
 app.use("/api/v1/orders", orderRoutes); 
 app.use("/api/v1/__debug", debugRoutes); // e2e 전용 테스트 라우터
 
@@ -134,5 +136,6 @@ app.listen(PORT, () => {
   console.log(`   ├─ CRUD /api/v1/stores/me/products/*`);
   console.log(`   ├─ CRUD /api/v1/stores (profile)`);
   console.log(`   ├─ GET  /api/v1/stores (feeds/comments/featured)`);
+  console.log(`   ├─ GET  /api/v1/users/me`);
   console.log(`   └─ DEBUG /api/v1/__debug`);
 });
