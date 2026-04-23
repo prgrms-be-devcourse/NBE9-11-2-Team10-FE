@@ -5,7 +5,7 @@
 export interface Feed {
   id: string;
   content: string;
-  mediaUrls: string[];
+  imageUrl: string;
   likeCount: number;
   commentCount: number;
   isLiked: boolean;
@@ -27,7 +27,7 @@ export interface FeedListResponse {
 // 🔹 피드 생성/수정 요청 DTO
 export interface CreateFeedRequest {
   content: string;
-  mediaUrls?: string[];
+  imageUrl?: string;
   isNotice?: boolean;
 }
 
@@ -37,7 +37,7 @@ export type UpdateFeedRequest = CreateFeedRequest;
 export interface CreateFeedResponse {
   feedId: string;
   content: string;
-  mediaUrls?: string[];
+  imageUrl?: string;
   createdAt: string;
   isNotice?: boolean;
 }

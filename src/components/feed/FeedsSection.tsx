@@ -4,12 +4,14 @@ import { FeedItem } from "./FeedItem";
 import { ApiError } from "@/utils/error/stores.error";
 import Link from "next/link";
 import { FeedItemList } from "./FeedItemList";
+import { SellerPublicResponse } from "@/types/auth";
 
 interface Props {
   sellerId: string;
+  seller: SellerPublicResponse;
 }
 
-export async function FeedsSection({ sellerId }: Props) {
+export async function FeedsSection({ sellerId, seller }: Props) {
   // ✅ 피드 목록만 서버에서 조회
   let feedList;
 
@@ -61,22 +63,27 @@ export async function FeedsSection({ sellerId }: Props) {
       className="bg-gray-50 rounded-lg p-6 mb-6"
       data-testid="feeds-section"
     >
-      <h2
-        className="text-xl font-bold mb-4 text-gray-800"
-        data-testid="section-title"
-      >
-        Activity
-      </h2>
-      <Link
-        href={`/stores/${sellerId}/feeds/new`}
-        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-        data-testid="create-feed-button"
-      >
-        + 피드 작성
-      </Link>
+      <div className="flex items-center gap-2 mb-4">
+        <h2
+          className="text-xl font-bold text-gray-800"
+          data-testid="section-title"
+        >
+          Activity
+        </h2>
+
+        <Link
+          href={`/stores/${sellerId}/feeds/new`}
+          className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+          data-testid="create-feed-button"
+        >
+          + 피드 작성
+        </Link>
+      </div>
+
       <FeedItemList
         feeds={feedList.data.feeds}
         sellerId={sellerId}
+        seller={seller}
       />
     </section>
   );
