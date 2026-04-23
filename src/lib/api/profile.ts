@@ -4,6 +4,7 @@ import {
   UserInfo,
   UserProfileResponse,
 } from "@/types/auth";
+import { uploadImageFile } from "@/lib/api/image-upload";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -58,11 +59,6 @@ export function parseCachedMyProfile(raw: string): MyProfile | null {
     return null;
   }
 }
-
-type PresignedUrlResponse = {
-  uploadUrl: string;
-  imageUrl: string;
-};
 
 function normalizeEnvelope<T>(payload: ApiEnvelope<T> | T): T {
   if (
@@ -234,48 +230,7 @@ export async function updateMyProfileImage(
 }
 
 export async function uploadProfileImageFile(file: File): Promise<string> {
-  const presignedResponse = await fetch(`${API_BASE_URL}/api/v1/images/presigned-url`, {
-    method: "POST",
-    credentials: "include",
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      fileName: file.name,
-      contentType: file.type || "application/octet-stream",
-      directory: "profile",
-    }),
-  });
-
-  if (!presignedResponse.ok) {
-    const errorText = await presignedResponse.text();
-    throw new Error(
-      `업로드 URL 발급에 실패했습니다. (${presignedResponse.status}) ${errorText}`,
-    );
-  }
-
-  const presignedPayload = (await presignedResponse.json()) as
-    | ApiEnvelope<PresignedUrlResponse>
-    | PresignedUrlResponse;
-  const presigned = normalizeEnvelope(presignedPayload);
-
-  const uploadResponse = await fetch(presigned.uploadUrl, {
-    method: "PUT",
-    headers: {
-      "Content-Type": file.type || "application/octet-stream",
-    },
-    body: file,
-  });
-
-  if (!uploadResponse.ok) {
-    const errorText = await uploadResponse.text();
-    throw new Error(
-      `이미지 업로드에 실패했습니다. (${uploadResponse.status}) ${errorText}`,
-    );
-  }
-
-  return presigned.imageUrl;
+  return uploadImageFile(file, "profile");
 }
 
 export async function deleteMyProfileImage(user: UserInfo): Promise<MyProfile> {
