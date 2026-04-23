@@ -89,3 +89,40 @@ export type LoginActionState = {
 export type UserInfo = {
   id: number; email: string; nickname: string; role: 'BUYER' | 'SELLER';
 };
+
+export interface UserProfileResponse {
+  id: number;
+  email: string;
+  name?: string;
+  nickname: string;
+  businessNumber?: string;
+  phoneNumber?: string;
+  roadAddress?: string;
+  detailAddress?: string;
+  address?: string;
+  profileImageUrl?: string | null;
+  imageUrl?: string | null;
+  bio?: string;
+}
+
+export interface SellerProfileResponse {
+  id: number;
+  email: string;
+  name?: string;
+  nickname: string;
+  businessNumber?: string;
+  phoneNumber?: string;
+  roadAddress?: string;
+  detailAddress?: string;
+  address?: string;
+  profileImageUrl?: string | null;
+  imageUrl?: string | null;
+  bio?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ApiEnvelope<T> {
+  success?: boolean;
+  data: T;
+}
