@@ -7,34 +7,35 @@ import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore'; // 👈 스토어 import
 
 export default function Header() {
-  const router = useRouter();
+    const router = useRouter();
   // 👇 스토어에서 상태와 액션 가져오기
-  const { user, status, logout: clearStore } = useAuthStore();
+    const { user, status, logout: clearStore } = useAuthStore();
 
-  const isLoggedIn = status === 'authenticated';
+    const isLoggedIn = status === 'authenticated';
+    const isSeller = user?.role === "SELLER";
 
-  const handleLogout = async () => {
-    try {
-      // 1. 스토어에서 로그아웃 액션 실행 (서버 요청 + 로컬 상태 초기화)
-      await clearStore();
-      
-      // 2. 로그인 페이지로 이동
-      router.push('/login');
-      
-      // 3. 서버 컴포넌트 데이터 새로고침 (Next.js App Router)
-      router.refresh();
-    } catch (error) {
-      console.error('Logout failed:', error);
-      alert('로그아웃 처리 중 오류가 발생했습니다.');
-    }
-  };
+    const handleLogout = async () => {
+        try {
+        // 1. 스토어에서 로그아웃 액션 실행 (서버 요청 + 로컬 상태 초기화)
+        await clearStore();
+        
+        // 2. 로그인 페이지로 이동
+        router.push('/login');
+        
+        // 3. 서버 컴포넌트 데이터 새로고침 (Next.js App Router)
+        router.refresh();
+        } catch (error) {
+        console.error('Logout failed:', error);
+        alert('로그아웃 처리 중 오류가 발생했습니다.');
+        }
+    };
 
-  // 👇 컴포넌트 마운트 시 인증 상태 확인 (새로고침 대비)
-  useEffect(() => {
-    if (status === 'idle') {
-      useAuthStore.getState().checkAuth();
-    }
-  }, [status]);
+    // 👇 컴포넌트 마운트 시 인증 상태 확인 (새로고침 대비)
+    useEffect(() => {
+        if (status === 'idle') {
+        useAuthStore.getState().checkAuth();
+        }
+    }, [status]);
 
     return (
         <header className="w-full bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
@@ -81,12 +82,14 @@ export default function Header() {
                                 >
                                     내 정보
                                 </Link>
-                                <Link
+                                {!isSeller && (
+                                    <Link
                                     href="/cart"
                                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition"
-                                >
+                                    >
                                     장바구니
-                                </Link>
+                                    </Link>
+                                )}
                                 <button
                                     onClick={handleLogout}
                                     className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600 transition shadow-sm"

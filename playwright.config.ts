@@ -19,7 +19,7 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: process.env.BASE_URL || "http://localhost:3000",
+    baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -27,13 +27,13 @@ export default defineConfig({
   webServer: process.env.CI
     ? undefined
     : {
-        command: "npm run dev", // 또는 'next dev'
-        url: "http://localhost:3000",
-        reuseExistingServer: !process.env.CI, // 로컬에서 기존 서버 재사용
-        timeout: 120 * 1000, // 서버 시작 대기 시간
-        stdout: "pipe",
-        stderr: "pipe",
-      },
+      command: "pnpm run dev", // 또는 'next dev'
+      url: "http://localhost:3000",
+      reuseExistingServer: !process.env.CI, // 로컬에서 기존 서버 재사용
+      timeout: 120 * 1000, // 서버 시작 대기 시간
+      stdout: "pipe",
+      stderr: "pipe",
+    },
 
   projects: [
     {

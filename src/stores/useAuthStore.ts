@@ -1,7 +1,7 @@
-import { logout } from '@/lib/api/auth';
+import { logout, refresh } from '@/lib/api/auth';
 import { create } from 'zustand';
 
-export type UserRole = 'BUYER' | 'SELLER' | 'ADMIN';
+export type UserRole = 'BUYER' | 'SELLER';
 
 export interface User {
   id: number;
@@ -16,9 +16,10 @@ interface AuthState {
   setUser: (user: User | null) => void;
   checkAuth: () => Promise<void>; // 👈 로직 변경
   logout: () => void;
+  refresh: () => Promise<boolean>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   status: 'idle',
   
@@ -48,8 +49,12 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ user, status: 'authenticated' });
         return;
       }
-      // 캐시가 없다면 비로그인 상태
-      set({ user: null, status: 'unauthenticated' });
+
+      const success = await get().refresh();
+
+      if (!success) {
+        set({ user: null, status: 'unauthenticated' });
+      }
     } catch (e) {
       console.error('Auth restore failed', e);
       set({ user: null, status: 'unauthenticated' });
@@ -72,4 +77,28 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: null, status: 'unauthenticated' });
     }
   },
+
+  refresh: async () => {
+    try {
+      const res = await refresh();
+  
+      if (!res.success) throw new Error('refresh failed');
+
+      set({ status: 'authenticated' });
+      
+      return true;
+    } catch (e) {
+      console.error('refresh failed', e);
+  
+      localStorage.removeItem('cached_user');
+  
+      set({
+        user: null,
+        status: 'unauthenticated',
+      });
+  
+      return false;
+    }
+  },
+
 }));

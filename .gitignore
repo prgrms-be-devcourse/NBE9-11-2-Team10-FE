@@ -54,3 +54,5 @@ Thumbs.db
 
 # mock build file
 dist/*
+
+mock-server.log

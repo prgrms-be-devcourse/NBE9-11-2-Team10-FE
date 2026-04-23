@@ -68,7 +68,7 @@ export default function LoginForm() {
           name="email"
           type="email"
           defaultValue=""
-          className={`w-full px-3 py-2.5 border rounded-lg text-sm ${fieldErrors.email ? 'border-red-500' : 'border-gray-300'}`}
+          className={`w-full px-3 py-2.5 border rounded-lg text-sm ${fieldErrors.email ? 'border-red-500' : 'border-gray-300'} text-gray-900`}
           placeholder="example@email.com"
         />
         {fieldErrors.email && (
@@ -84,7 +84,7 @@ export default function LoginForm() {
         <input
           name="password"
           type="password"
-          className={`w-full px-3 py-2.5 border rounded-lg text-sm ${fieldErrors.password ? 'border-red-500' : 'border-gray-300'}`}
+          className={`w-full px-3 py-2.5 border rounded-lg text-sm ${fieldErrors.password ? 'border-red-500' : 'border-gray-300'} text-gray-900`}
           placeholder="8~20자, 영문과 숫자 포함"
         />
         {fieldErrors.password && (

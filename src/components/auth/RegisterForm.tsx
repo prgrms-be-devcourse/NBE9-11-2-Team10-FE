@@ -1,7 +1,7 @@
 // components/auth/RegisterForm.tsx
 'use client';
 
-import { useActionState, useCallback, useEffect, useState } from 'react';
+import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AddressSearchInput } from './AddressSearchInput';
 import {
@@ -43,49 +43,83 @@ export default function RegisterForm({ role }: RegisterFormProps) {
     nickname: { checked: false, available: false, loading: false, message: '' },
   });
 
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const nicknameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!state.success && state.errors && Object.keys(state.errors).length > 0) {
+      setCheckState(prev => {
+        const updated = { ...prev };
+        if (state.errors.email) {
+          updated.email = { checked: false, available: false, loading: false, message: '' };
+        }
+        if (state.errors.nickname) {
+          updated.nickname = { checked: false, available: false, loading: false, message: '' };
+        }
+        return updated;
+      });
+    }
+  }, [state.success, state.errors]);
+
   // ✅ 중복 체크 실행 함수
-  const handleDuplicateCheck = useCallback(async (type: DuplicateCheckType, value: string) => {
+  const handleDuplicateCheck = useCallback(async (type: DuplicateCheckType) => {
     const key = duplicateCheckKeyByType[type];
+    const inputRef = key === 'email' ? emailInputRef : nicknameInputRef;
+    const value = inputRef.current?.value || '';
 
     if (!value.trim()) {
       setCheckState(prev => ({
         ...prev,
-        [key]: { ...prev[key], message: '값을 입력해 주세요.' }
+        [key]: { ...prev[key], message: '값을 입력해 주세요.', checked: true, available: false, loading: false },
       }));
       return;
     }
 
     setCheckState(prev => ({
       ...prev,
-      [key]: { ...prev[key], loading: true, message: '' }
+      [key]: { ...prev[key], loading: true, message: '', checked: false }
     }));
 
-    const result = await checkDuplicate(type, value);
+    try {
+      const result = await checkDuplicate(type, value);
 
-    setCheckState(prev => {
-      if (result.success && result.available !== undefined) {
+      setCheckState(prev => {
+        if (result.success && result.available !== undefined) {
+          return {
+            ...prev,
+            [key]: {
+              checked: true,
+              available: result.available!,
+              loading: false,
+              message: result.available
+                ? `사용 가능한 ${type === 'EMAIL' ? '이메일' : '닉네임'}입니다.`
+                : `이미 사용 중인 ${type === 'EMAIL' ? '이메일' : '닉네임'}입니다.`
+            }
+          };
+        }
         return {
           ...prev,
           [key]: {
-            checked: true,
-            available: result.available!,
+            ...prev[key],
             loading: false,
-            message: result.available
-              ? `사용 가능한 ${type === 'EMAIL' ? '이메일' : '닉네임'}입니다.`
-              : `이미 사용 중인 ${type === 'EMAIL' ? '이메일' : '닉네임'}입니다.`
+            message: result.error || '중복 확인 중 오류가 발생했습니다.',
+            checked: false,
+            available: false
           }
         };
-      }
-      return {
+      });
+    } catch {
+      setCheckState(prev => ({
         ...prev,
         [key]: {
           ...prev[key],
           loading: false,
-          message: result.error || '중복 확인 중 오류가 발생했습니다.',
-          checked: false
+          message: '중복 확인 중 오류가 발생했습니다.',
+          checked: false,
+          available: false
         }
-      };
-    });
+      }));
+    }
   }, []);
 
   useEffect(() => {
@@ -117,31 +151,22 @@ export default function RegisterForm({ role }: RegisterFormProps) {
           </label>
           <div className="flex gap-2">
             <input
+              ref={emailInputRef}  // ✅ ref 추가
               name="email"
               type="email"
               data-testid="email-input"
               defaultValue={state.formData.email}
-              disabled={checkState.email.checked && checkState.email.available}
-              onChange={(e) => {
-                // 입력 변경 시 체크 상태 초기화
-                if (checkState.email.checked) {
-                  setCheckState(prev => ({
-                    ...prev,
-                    email: { ...prev.email, checked: false, available: false, message: '' }
-                  }));
-                }
-              }}
-              className={`flex-1 px-3 py-2.5 border rounded-lg text-sm ${state.errors.email ? 'border-red-500' : 'border-gray-300'
-                } ${checkState.email.message && !checkState.email.available ? 'border-red-500' : ''}`}
+              readOnly={checkState.email.checked && checkState.email.available}
+              className={`flex-1 px-3 py-2.5 border rounded-lg text-sm ${state.errors.email || (checkState.email.message && !checkState.email.available)
+                ? 'border-red-500'
+                : 'border-gray-300'
+                } text-gray-900`}
               placeholder="example@email.com"
             />
             <button
               type="button"
               data-testid="email-duplicate-check-btn"
-              onClick={() => {
-                const emailInput = document.querySelector('input[name="email"]') as HTMLInputElement;
-                handleDuplicateCheck('EMAIL', emailInput?.value || '');
-              }}
+              onClick={() => handleDuplicateCheck('EMAIL')}  // ✅ ref 로 값 읽으므로 파라미터 불필요
               disabled={checkState.email.loading || (checkState.email.checked && checkState.email.available)}
               className="px-4 py-2.5 bg-gray-800 text-white text-sm rounded-lg disabled:opacity-50"
             >
@@ -152,12 +177,13 @@ export default function RegisterForm({ role }: RegisterFormProps) {
                   : '중복 확인'}
             </button>
           </div>
-          {state.errors.email ? (
-            <p className="mt-1 text-sm text-red-600">{state.errors.email}</p>
-          ) : checkState.email.message ? (
+          {/* ✅ 에러 메시지 우선순위: 중복체크 에러 > 서버 에러 */}
+          {checkState.email.checked ? (
             <p className={`mt-1 text-sm ${checkState.email.available ? 'text-green-600' : 'text-red-600'}`}>
               {checkState.email.message}
             </p>
+          ) : state.errors.email ? (
+            <p className="mt-1 text-sm text-red-600">{state.errors.email}</p>
           ) : null}
         </div>
 
@@ -171,7 +197,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
             type="password"
             defaultValue={state.formData.password}
             className={`w-full px-3 py-2.5 border rounded-lg text-sm ${state.errors.password ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } text-gray-900`}
             placeholder="8~20자, 영문과 숫자 포함"
           />
           {state.errors.password && (
@@ -189,7 +215,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
             type="text"
             defaultValue={state.formData.name}
             className={`w-full px-3 py-2.5 border rounded-lg text-sm ${state.errors.name ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } text-gray-900`}
             placeholder="실명을 입력해 주세요"
           />
           {state.errors.name && (
@@ -204,30 +230,22 @@ export default function RegisterForm({ role }: RegisterFormProps) {
           </label>
           <div className="flex gap-2">
             <input
+              ref={nicknameInputRef}  // ✅ ref 추가
               name="nickname"
               type="text"
               data-testid="nickname-input"
               defaultValue={state.formData.nickname}
-              disabled={checkState.nickname.checked && checkState.nickname.available}
-              onChange={(e) => {
-                if (checkState.nickname.checked) {
-                  setCheckState(prev => ({
-                    ...prev,
-                    nickname: { ...prev.nickname, checked: false, available: false, message: '' }
-                  }));
-                }
-              }}
-              className={`flex-1 px-3 py-2.5 border rounded-lg text-sm ${state.errors.nickname ? 'border-red-500' : 'border-gray-300'
-                } ${checkState.nickname.message && !checkState.nickname.available ? 'border-red-500' : ''}`}
+              readOnly={checkState.nickname.checked && checkState.nickname.available}
+              className={`flex-1 px-3 py-2.5 border rounded-lg text-sm ${state.errors.nickname || (checkState.nickname.message && !checkState.nickname.available)
+                  ? 'border-red-500'
+                  : 'border-gray-300'
+                } text-gray-900`}
               placeholder="2~20자, 영문/숫자/한글/_"
             />
             <button
               type="button"
               data-testid="nickname-duplicate-check-btn"
-              onClick={() => {
-                const nicknameInput = document.querySelector('input[name="nickname"]') as HTMLInputElement;
-                handleDuplicateCheck('NICKNAME', nicknameInput?.value || '');
-              }}
+              onClick={() => handleDuplicateCheck('NICKNAME')}
               disabled={checkState.nickname.loading || (checkState.nickname.checked && checkState.nickname.available)}
               className="px-4 py-2.5 bg-gray-800 text-white text-sm rounded-lg disabled:opacity-50"
             >
@@ -238,12 +256,12 @@ export default function RegisterForm({ role }: RegisterFormProps) {
                   : '중복 확인'}
             </button>
           </div>
-          {state.errors.nickname ? (
-            <p className="mt-1 text-sm text-red-600">{state.errors.nickname}</p>
-          ) : checkState.nickname.message ? (
+          {checkState.nickname.checked ? (
             <p className={`mt-1 text-sm ${checkState.nickname.available ? 'text-green-600' : 'text-red-600'}`}>
               {checkState.nickname.message}
             </p>
+          ) : state.errors.nickname ? (
+            <p className="mt-1 text-sm text-red-600">{state.errors.nickname}</p>
           ) : null}
         </div>
 
@@ -257,7 +275,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
             type="tel"
             defaultValue={state.formData.phoneNumber}
             className={`w-full px-3 py-2.5 border rounded-lg text-sm ${state.errors.phoneNumber ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } text-gray-900`}
             placeholder="010-0000-0000"
           />
           {state.errors.phoneNumber && (
@@ -282,13 +300,16 @@ export default function RegisterForm({ role }: RegisterFormProps) {
             placeholder="상세주소 (동/호수, 층)"
             disabled={isPending}
             className={`w-full px-3 py-2.5 border rounded-lg text-sm ${state.errors.address ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } text-gray-900`}
           />
           {state.errors.detailAddress && (
             <p className="mt-1 text-sm text-red-600">{state.errors.detailAddress}</p>
           )}
-          {/* <input type="hidden" name="roadAddress" value={state.formData.roadAddress} />
-          <input type="hidden" name="detailAddress" value={state.formData.detailAddress} /> */}
+          {state.errors.address && (
+            <p className="mt-1 text-sm text-red-600">{state.errors.address}</p>
+          )}
+          <input type="hidden" name="roadAddress" value={state.formData.roadAddress || ''} />
+          <input type="hidden" name="detailAddress" value={state.formData.detailAddress || ''} />
         </div>
 
         {/* 서버 메시지 (성공/실패 공통) */}
