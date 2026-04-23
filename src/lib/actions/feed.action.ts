@@ -140,7 +140,7 @@ export async function createCommentAction(
     // 댓글 목록 캐시 무효화
     revalidatePath(`/stores/${sellerId}/feeds/${feedId}`);
     
-    return { success: true, data: result.data };
+    return { success: true, data: result };
   } catch (error) {
     if (error instanceof ApiError) {
       return { success: false, error: error.message };

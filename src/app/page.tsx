@@ -6,6 +6,7 @@ import { ProductListResult, ProductSummary } from "@/types/product";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 export default function HomePage() {
   const [products, setProducts] = useState<ProductSummary[]>([]);
@@ -75,10 +76,20 @@ export default function HomePage() {
                   className="block"
                   >
                     <div className="flex items-center p-3 border rounded-md hover:shadow-md transition bg-gray-50">
-                      <div className="w-12 h-16 bg-gray-300 rounded mr-4 flex-shrink-0"></div>
+                      <div className="w-12 h-16 bg-gray-300 rounded mr-4 flex-shrink-0 overflow-hidden relative">
+                        {product.imageUrl ? (
+                          <Image
+                            src={product.imageUrl}
+                            alt={product.productName}
+                            fill
+                            className="object-cover"
+                            sizes="48px"
+                          />
+                        ) : null}
+                      </div>
                       <div>
                       <p className="font-semibold text-gray-700">{product.productName}</p>
-                      <p className="text-sm text-gray-500">{product.nickname} • {product.price}원</p>
+                      <p className="text-sm text-gray-500">{product.nickname} • {product.price.toLocaleString()}원</p>
                       </div>
                     </div>
                   </Link>
