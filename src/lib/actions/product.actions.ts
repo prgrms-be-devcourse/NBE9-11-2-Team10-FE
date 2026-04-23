@@ -45,7 +45,7 @@ export async function handleCreateProduct(
       };
     }
 
-    productId = result.data.productId;
+    productId = (result.data as any)?.data?.productId ?? result.data?.productId;
   } catch (error) {
     return {
       success: false,
