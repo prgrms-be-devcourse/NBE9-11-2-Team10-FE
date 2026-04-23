@@ -20,6 +20,7 @@ import {
   validateCreateOrder,
   validateConfirmOrder,
   validateProductsExist,
+  fetchOrderProductInfo,
 } from "../lib/mock-order-validation";
 import { MOCK_USERS } from "../lib/mock-user-data";
 
@@ -41,17 +42,17 @@ router.post("/", mockAuthMiddleware, (req: Request, res: Response) => {
 
   const { deliveryAddress, orderProducts } = req.body as CreateOrderRequest;
 
-  // 3. 상품 존재 여부 검증
-  const productError = validateProductsExist(orderProducts, "/api/v1/orders");
-  if (productError) {
-    return res.status(404).json(productError);
+  // 2. ✅ 상품 존재 여부 + 재고/가격 검증 통합
+  const productInfo = fetchOrderProductInfo(orderProducts, "/api/v1/orders");
+  if (!('success' in productInfo)) {
+    // ProblemDetailResponse 반환 시
+    return res.status(404).json(productInfo);
   }
 
   try {
-    // 4. 주문 생성
+    // 3. 주문 생성 (내부에서 ProductStore 참조하므로 외부에서 전달 불필요)
     const newOrder = OrderStore.create(user.id, deliveryAddress, orderProducts);
 
-    // 5. 응답 반환 (명세서 기반)
     return res.status(200).json({
       orderNumber: newOrder.orderNumber,
       totalAmount: newOrder.totalAmount,

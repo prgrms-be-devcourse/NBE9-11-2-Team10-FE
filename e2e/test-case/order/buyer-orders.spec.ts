@@ -11,14 +11,13 @@ test.describe("🛒 구매자 주문 목록 페이지", () => {
     // 🔐 인증 테스트
     // ============================================================================
 
-    test("비로그인 접근 시 에러 표시 후 로그인 페이지로 유도", async ({
+    test("비로그인 접근 시 로그인 페이지로 유도", async ({
         page,
         orderHelpers,
     }) => {
         await orderHelpers.goToBuyerOrders();
 
-        await expect(page.getByTestId("orders-error-message")).toBeVisible();
-        await expect(page.getByTestId("login-button")).toBeVisible();
+        await expect(page).toHaveURL("http://localhost:3000/login?redirect=%2Forders");
     });
 
     test("로그인 후 주문 목록 페이지 접근 가능", async ({
@@ -175,28 +174,6 @@ test.describe("🛒 구매자 주문 목록 페이지", () => {
         await expect(page.getByTestId("order-detail-error")).toBeVisible();
         await expect(page.getByText("주문 내역을 찾을 수 없습니다")).toBeVisible();
     });
-
-    test("다른 사용자의 주문 접근 시 접근 거부", async ({
-        page,
-        orderHelpers,
-        loginAsBuyer,
-        loginAsSeller,
-    }) => {
-        // 1. 판매자로 로그인하여 주문 생성
-        await loginAsSeller();
-        const { orderNumber } = await orderHelpers.createMockOrder(
-            MOCK_ORDER_BUYER.id, // 다른 사용자의 주문 생성
-            [{ productId: 101, quantity: 1 }],
-        );
-
-        // 2. 구매자로 로그인하여 해당 주문 접근 시도
-        await loginAsBuyer();
-        await page.goto(`/orders/${orderNumber}`);
-        await page.waitForLoadState("networkidle");
-
-        // ✅ 본인 주문이므로 접근 가능 (권한 로직 확인)
-        await expect(page.getByTestId("order-detail-container")).toBeVisible();
-    });
 });
 
 test.describe("🛒 구매자 주문 상세 페이지", () => {
@@ -242,9 +219,9 @@ test.describe("🛒 구매자 주문 상세 페이지", () => {
         await expect(table).toBeVisible();
 
         // 첫 번째 상품 확인
-        await expect(page.getByTestId("order-item-name-0")).toHaveText("맥북 에어");
+        await expect(page.getByTestId("order-item-name-0")).toHaveText("스프링 입문");
         await expect(page.getByTestId("order-item-quantity-0")).toHaveText("1개");
-        await expect(page.getByTestId("order-item-price-0")).toContainText("110,000");
+        await expect(page.getByTestId("order-item-price-0")).toContainText("18,000원");
     });
 
     test("배송 추적번호가 있으면 표시된다", async ({

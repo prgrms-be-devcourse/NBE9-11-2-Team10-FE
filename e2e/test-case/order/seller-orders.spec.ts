@@ -212,36 +212,6 @@ test.describe("🏪 판매자 주문 관리 페이지", () => {
 
     await expect(page.getByText("주문 내역을 찾을 수 없습니다")).toBeVisible();
   });
-
-  test("다른 판매자의 주문 접근 시 접근 거부", async ({
-    browser,
-    orderHelpers,
-  }) => {
-    // 1. 판매자 A 로 로그인하여 주문 생성
-    const contextA = await browser.newContext();
-    const pageA = await contextA.newPage();
-
-    await pageA.goto("/login");
-    await pageA.fill('input[name="email"]', MOCK_ORDER_SELLER.email);
-    await pageA.fill('input[name="password"]', MOCK_ORDER_SELLER.password);
-    await pageA.click('button[type="submit"]');
-    await pageA.waitForLoadState("networkidle");
-
-    const { orderNumber } = await orderHelpers.createMockOrder(
-      MOCK_ORDER_BUYER.id,
-      [{ productId: 101, quantity: 1 }],
-    );
-
-    await contextA.close();
-
-    // 2. 다른 브라우저 컨텍스트로 판매자 B 시뮬레이션 (권한 없음)
-    //    (실제 테스트 시 다른 판매자 계정으로 로그인하여 테스트)
-    //    여기서는 단순화하여 스킵
-    test.skip(
-      true,
-      "다중 판매자 테스트는 별도 계정 설정 및 환경 구성이 필요합니다"
-    );
-  });
 });
 
 test.describe("🏪 판매자 주문 상세 페이지", () => {

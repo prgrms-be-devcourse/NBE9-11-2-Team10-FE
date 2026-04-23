@@ -1,5 +1,6 @@
 // e2e/mock-server/lib/mock-order-data.ts
 import { ORDER_SEEDS_ARRAY } from "./mock-order-seeds";
+import { ProductStore } from "./mock-product-data";
 import { MOCK_USERS, MockUser } from "./mock-user-data";
 
 // ============================================================================
@@ -116,11 +117,46 @@ export const OrderStore = {
         deliveryAddress: string,
         products: Array<{ productId: number; quantity: number }>,
         paymentKey?: string, 
-    ): Order => {
-        const order = createMockOrder(buyerId, deliveryAddress, products, paymentKey);
-        orders.set(order.orderNumber, order);
-        return order;
-    },
+      ): Order => {
+        orderCounter.current += 1;
+    
+        // ✅ ProductStore 에서 실시간 상품 정보 조회
+        const orderItems: OrderItem[] = products.map((p) => {
+          const product = ProductStore.findById(p.productId);
+          if (!product) {
+            throw new Error(`Product ${p.productId} not found`); // validate 에서 이미 체크했으므로 방어코드
+          }
+          return {
+            productId: p.productId,
+            productName: product.productName,
+            quantity: p.quantity,
+            orderPrice: product.price, // ✅ 하드코딩 제거, 실시간 가격 사용
+          };
+        });
+    
+        // ✅ 판매자 ID 는 첫 번째 상품의 판매자로 설정 (단일 판매자 가정)
+        // 다중 판매자 주문이라면 별도 로직 필요
+        const sellerId = orderItems[0] 
+          ? ProductStore.findById(orderItems[0].productId)?.sellerId ?? 1002 
+          : 1002;
+          
+        const totalAmount = orderItems.reduce((sum, item) => sum + item.orderPrice * item.quantity, 0);
+    
+        return {
+          orderNumber: generateOrderNumber(),
+          buyerId,
+          sellerId,
+          totalAmount,
+          paymentStatus: paymentKey ? "PAID" : "READY",
+          delivery: {
+            deliveryAddress,
+            trackingNumber: paymentKey ? `TRK-${Date.now()}` : undefined,
+          },
+          orderItems,
+          createdAt: new Date().toISOString(),
+          paymentKey,
+        };
+      },
 
     // 🔍 주문 번호로 조회
     findByOrderNumber: (orderNumber: string): Order | undefined => {

@@ -1,6 +1,7 @@
 // e2e/mock-server/lib/mock-order-validation.ts
 import { ProblemDetailResponse, createErrorResponse } from "./mock-common-data";
 import { CreateOrderRequest, ConfirmOrderRequest } from "./mock-order-data";
+import { ProductStore } from "./mock-product-data";
 
 // ============================================================================
 // 🔹 주문 생성 요청 검증
@@ -88,10 +89,11 @@ export const validateProductsExist = (
   products: Array<{ productId: number; quantity: number }>,
   path: string,
 ): ProblemDetailResponse | null => {
-  const MOCK_PRODUCT_IDS = [101, 102, 103, 104, 105]; // mock-order-data.ts 와 동기화
-
   for (const item of products) {
-    if (!MOCK_PRODUCT_IDS.includes(item.productId)) {
+    const product = ProductStore.findById(item.productId);
+    
+    // 상품이 없거나 비활성화된 경우
+    if (!product) {
       return createErrorResponse(
         404,
         "PRODUCT_NOT_FOUND",
@@ -99,6 +101,55 @@ export const validateProductsExist = (
         path,
       );
     }
+    
+    // 재고 부족 검증 (선택사항)
+    if (product.stock < item.quantity) {
+      return createErrorResponse(
+        400,
+        "INSUFFICIENT_STOCK",
+        `상품 "${product.productName}" 의 재고가 부족합니다. (요청: ${item.quantity}, 보유: ${product.stock})`,
+        path,
+      );
+    }
   }
   return null;
+};
+
+export const fetchOrderProductInfo = (
+  products: Array<{ productId: number; quantity: number }>,
+  path: string,
+): { 
+  success: true; 
+  items: Array<{ 
+    productId: number; 
+    productName: string; 
+    quantity: number; 
+    orderPrice: number; 
+    sellerId: number; 
+  }>; 
+} | ProblemDetailResponse => {
+  
+  const orderItems = [];
+  
+  for (const item of products) {
+    const product = ProductStore.findById(item.productId);
+    if (!product) {
+      return createErrorResponse(
+        404,
+        "PRODUCT_NOT_FOUND",
+        `상품을 찾을 수 없습니다. ID: ${item.productId}`,
+        path,
+      );
+    }
+    
+    orderItems.push({
+      productId: product.productId,
+      productName: product.productName,
+      quantity: item.quantity,
+      orderPrice: product.price, // ✅ 실시간 가격 참조
+      sellerId: product.sellerId, // ✅ 판매자 정보 참조
+    });
+  }
+  
+  return { success: true, items: orderItems };
 };
