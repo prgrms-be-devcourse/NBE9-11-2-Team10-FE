@@ -14,7 +14,9 @@ export default async function EditFeedPage({ params }: PageProps) {
   let initialFeed;
   try {
     const feedList = await fetchFeedList(sellerId);
-    initialFeed = feedList.feeds.find((f) => f.feedId === feedId);
+    initialFeed = feedList.data.feeds.find(
+      (f) => String(f.id).trim() === String(feedId).trim()
+    );
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
       return (

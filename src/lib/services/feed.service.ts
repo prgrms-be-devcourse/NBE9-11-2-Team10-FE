@@ -146,7 +146,7 @@ export async function createFeed(
   // 2. 요청 데이터 구성
   const body: CreateFeedRequest = {
     content: validated.data.content,
-    mediaUrls: validated.data.mediaUrls,
+    imageUrl: validated.data.imageUrl || "",
     isNotice: validated.data.isNotice,
   };
 
@@ -203,7 +203,7 @@ export async function updateFeed(
 
   const body: CreateFeedRequest = {
     content: validated.data.content,
-    mediaUrls: validated.data.mediaUrls,
+    imageUrl: validated.data.imageUrl,
     isNotice: validated.data.isNotice,
   };
 
@@ -214,7 +214,7 @@ export async function updateFeed(
   );
 
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/stores/${sellerId}/feeds/${feedId}`,
+    `${API_BASE_URL}/api/v1/stores/me/feeds/${feedId}`,
     {
       method: "PATCH",
       headers: {
