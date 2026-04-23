@@ -23,7 +23,7 @@ function SectionSkeleton() {
 export default async function SellerProfilePage({ params }: PageProps) {
   const { sellerId } = await params;
   const seller = await fetchSellerPulbicInfo(sellerId);
-  
+
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-6xl mx-auto px-4">
@@ -31,6 +31,24 @@ export default async function SellerProfilePage({ params }: PageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* 메인 콘텐츠 영역 */}
           <div className="lg:col-span-3 space-y-6">
+            {seller.bio && (
+              <section
+                className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+                data-testid="seller-intro-section"
+              >
+                <div className="border-b border-gray-100 bg-gradient-to-r from-amber-50 via-white to-sky-50 px-6 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                    About
+                  </p>
+                </div>
+                <div className="px-6 py-5">
+                  <p className="whitespace-pre-wrap text-sm leading-7 text-gray-700">
+                    {seller.bio}
+                  </p>
+                </div>
+              </section>
+            )}
+
             <Suspense fallback={<SectionSkeleton />}>
               <FeaturedProductsSection sellerId={sellerId} />
             </Suspense>

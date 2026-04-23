@@ -11,6 +11,7 @@ export interface Product {
   price: number;
   stock: number;
   nickname: string;
+  sellerId?: number;
   type: ProductType;
   imageUrl?: string | null;
   status: ProductStatus;
@@ -24,6 +25,7 @@ export interface ProductSummary {
   productName: string;
   price: number;
   nickname: string;
+  sellerId: number;
   imageUrl?: string | null;
   type: ProductType;
   status: PublicStatus;

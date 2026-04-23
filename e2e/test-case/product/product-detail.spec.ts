@@ -138,6 +138,17 @@ test.describe("🔍 상품 상세 페이지", () => {
     ).toBeVisible();
   });
 
+  test("작가 닉네임 클릭 시 판매자 스토어로 이동", async ({
+    page,
+    productHelpers,
+  }) => {
+    await productHelpers.goToProductDetail(MOCK_PRODUCTS.springIntro.id);
+
+    await page.getByTestId("product-seller-link").click();
+
+    await expect(page).toHaveURL(/\/stores\/1002$/);
+  });
+
   // 🔹 이미지 없는 상품 처리
   test("이미지 URL 이 null 인 상품 - 이미지 컨테이너 유지", async ({
     page,

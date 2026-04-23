@@ -72,6 +72,23 @@ test.describe("🏪 판매자 스토어 프로필 페이지", () => {
     await storeHelpers.assertFeaturedProducts(page, MOCK_FEATURED_PRODUCTS);
   });
 
+  test("작가 소개글과 전체보기 링크가 표시된다", async ({
+    page,
+    storeHelpers,
+  }) => {
+    await storeHelpers.goToStoreProfile(SELLER_ID);
+
+    await expect(page.getByTestId("seller-intro-section")).toContainText(
+      MOCK_STORE_PROFILE.bio,
+    );
+
+    const allProductsLink = page.getByTestId("seller-products-link");
+    await expect(allProductsLink).toBeVisible();
+    await allProductsLink.click();
+
+    await expect(page).toHaveURL(new RegExp(`/products\\?sellerId=${SELLER_ID}(&|$)`));
+  });
+
   /*
   test("강조 상품 없음 - 빈 상태 메시지 표시", async ({
     page,
