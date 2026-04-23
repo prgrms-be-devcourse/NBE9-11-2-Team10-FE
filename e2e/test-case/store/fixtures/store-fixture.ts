@@ -221,6 +221,13 @@ export const test = base.extend<{
           "Favorite",
         );
 
+        await expect(
+          section.getByTestId("seller-products-link"),
+        ).toHaveAttribute(
+          "href",
+          `/products?sellerId=${MOCK_SELLER.id}&page=1`,
+        );
+
         // ✅ 각 상품 카드 검증
         for (const product of products) {
           const card = page.getByTestId(`product-card-${product.productId}`);

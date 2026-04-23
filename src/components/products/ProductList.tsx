@@ -46,40 +46,54 @@ export default function ProductList({ products, pagination }: ProductListProps) 
 
   return (
     <>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {products.map((product) => (
-          <Link
+          <div
             key={product.productId}
-            href={`/products/${product.productId}`}
             data-testid={`product-card-${product.productId}`}
-            className="block border rounded-lg overflow-hidden hover:shadow-lg transition"
+            className="overflow-hidden rounded-2xl border border-stone-200 bg-white/95 shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)]"
           >
-            <div className="aspect-square bg-gray-100">
-              {product.imageUrl ? (
-                <img
-                  src={product.imageUrl}
-                  alt={product.productName}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">
-                  이미지 없음
-                </div>
-              )}
-            </div>
-            <div className="p-4">
-              <h3 className="font-medium truncate">{product.productName}</h3>
-              <p className="text-lg font-bold text-gray-900 mt-1">
-                {product.price.toLocaleString()}원
-              </p>
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs text-gray-500">
-                  {product.type === 'BOOK' ? '실물 도서' : '전자책'}
-                </span>
-                {getStatusBadge(product.status)}
+            <Link
+              href={`/products/${product.productId}`}
+              className="block"
+            >
+              <div className="aspect-square bg-stone-100">
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.productName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-stone-400">
+                    이미지 없음
+                  </div>
+                )}
               </div>
+              <div className="p-4">
+                <h3 className="truncate font-medium text-stone-900">{product.productName}</h3>
+                <p className="mt-1 text-lg font-bold text-stone-900">
+                  {product.price.toLocaleString()}원
+                </p>
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <span className="text-xs text-stone-500">
+                    {product.type === 'BOOK' ? '실물 도서' : '전자책'}
+                  </span>
+                  {getStatusBadge(product.status)}
+                </div>
+              </div>
+            </Link>
+
+            <div className="px-4 pb-4">
+              <Link
+                href={`/stores/${product.sellerId}`}
+                className="block w-full rounded-xl border border-stone-300 bg-stone-50 px-3 py-2 text-center text-sm font-medium text-stone-700 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"
+                data-testid={`seller-store-link-${product.productId}`}
+              >
+                작가정보 보기
+              </Link>
             </div>
-          </Link>
+          </div>
         ))}
       </div>
 
@@ -89,14 +103,14 @@ export default function ProductList({ products, pagination }: ProductListProps) 
         {pagination.page > 1 && (  // ✅ 0 → 1
           <Link
             href={createPageLink(pagination.page - 1)}
-            className="px-4 py-2 border rounded hover:bg-gray-50"
+            className="rounded-xl border border-stone-300 bg-white px-4 py-2 text-stone-700 shadow-sm transition hover:bg-stone-50"
             data-testid="pagination-prev"
           >
             이전
           </Link>
         )}
 
-        <span className="text-sm text-gray-600" data-testid="pagination-info">
+        <span className="rounded-full bg-white px-4 py-2 text-sm text-stone-600 shadow-sm" data-testid="pagination-info">
           {/* ✅ totalPages 는 백엔드에서 이미 1-based 로 변환되어 옴 */}
           {pagination.page} / {pagination.totalPages}
         </span>
@@ -105,7 +119,7 @@ export default function ProductList({ products, pagination }: ProductListProps) 
         {pagination.page < pagination.totalPages && (  // ✅ 0 → 1
           <Link
             href={createPageLink(pagination.page + 1)}
-            className="px-4 py-2 border rounded hover:bg-gray-50"
+            className="rounded-xl border border-stone-300 bg-white px-4 py-2 text-stone-700 shadow-sm transition hover:bg-stone-50"
             data-testid="pagination-next"
           >
             다음

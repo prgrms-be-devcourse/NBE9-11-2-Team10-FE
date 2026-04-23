@@ -41,12 +41,21 @@ export async function FeaturedProductsSection({ sellerId }: Props) {
       className="bg-gray-50 rounded-lg p-6 mb-6"
       data-testid="featured-products-section"
     >
-      <h2
-        className="text-xl font-bold mb-4 text-gray-800"
-        data-testid="section-title"
-      >
-        Favorite
-      </h2>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h2
+          className="text-xl font-bold text-gray-800"
+          data-testid="section-title"
+        >
+          Favorite
+        </h2>
+        <Link
+          href={`/products?sellerId=${sellerId}&page=1`}
+          className="shrink-0 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-blue-500 hover:text-blue-600"
+          data-testid="seller-products-link"
+        >
+          해당 작가 상품 전체보기
+        </Link>
+      </div>
 
       <div className="grid grid-cols-3 gap-4" data-testid="products-grid">
         {featuredProducts.products.length > 0 ? (

@@ -192,6 +192,19 @@ test.describe("📦 상품 목록 페이지", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 
+  test("작가정보 보기 버튼 클릭 시 판매자 스토어로 이동", async ({
+    page,
+    productHelpers,
+  }) => {
+    await productHelpers.goToProductList();
+
+    await page
+      .getByTestId(`seller-store-link-${MOCK_PRODUCTS.springIntro.id}`)
+      .click();
+
+    await expect(page).toHaveURL(/\/stores\/1002$/);
+  });
+
   // 🔹 접근성: ARIA 레이블 확인
   test("접근성 - 필터 버튼 ARIA 속성", async ({ page, productHelpers }) => {
     await productHelpers.goToProductList();

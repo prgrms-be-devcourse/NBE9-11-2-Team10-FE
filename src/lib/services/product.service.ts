@@ -293,6 +293,40 @@ export async function fetchProductDetail(
   }
 }
 
+export async function findSellerIdByProductId(
+  productId: number,
+): Promise<number | null> {
+  const pageSize = 100;
+
+  const firstPageResult = await fetchProductList({ page: 1, size: pageSize });
+  if (!firstPageResult.success) {
+    return null;
+  }
+
+  const firstMatch = firstPageResult.data.content.find(
+    (product) => product.productId === productId,
+  );
+  if (firstMatch) {
+    return firstMatch.sellerId;
+  }
+
+  for (let page = 2; page <= firstPageResult.data.totalPages; page += 1) {
+    const pageResult = await fetchProductList({ page, size: pageSize });
+    if (!pageResult.success) {
+      break;
+    }
+
+    const match = pageResult.data.content.find(
+      (product) => product.productId === productId,
+    );
+    if (match) {
+      return match.sellerId;
+    }
+  }
+
+  return null;
+}
+
 // ============================================================================
 // 🔹 POST /api/v1/stores/me/products - 상품 등록 (판매자 전용)
 // ============================================================================

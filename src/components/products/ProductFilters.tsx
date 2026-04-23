@@ -44,6 +44,10 @@ export default function ProductFilters({ defaultType, defaultStatus }: ProductFi
       const params = new URLSearchParams();
       params.set('page', '1');
       params.set('size', searchParams.get('size') || '10');
+      const sellerId = searchParams.get('sellerId');
+      if (sellerId) {
+        params.set('sellerId', sellerId);
+      }
       
       router.replace(`?${params.toString()}`, { scroll: false });
       router.refresh(); // ✅ 서버 데이터 갱신
@@ -51,7 +55,7 @@ export default function ProductFilters({ defaultType, defaultStatus }: ProductFi
   }, [router, searchParams]);
 
   return (
-    <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-lg mb-6">
+    <div className="mb-6 flex flex-wrap items-center gap-4 rounded-2xl border border-stone-200 bg-white/95 p-4 shadow-sm">
       
       {/* 🔹 상품 유형 필터 */}
       <div className="flex items-center gap-2">
@@ -115,7 +119,7 @@ export default function ProductFilters({ defaultType, defaultStatus }: ProductFi
           type="button"
           onClick={handleReset}
           disabled={isPending}
-          className="ml-auto text-sm text-gray-500 hover:text-gray-700 
+          className="ml-auto text-sm text-stone-500 hover:text-stone-700 
                      disabled:opacity-50 underline decoration-dotted"
         >
           필터 초기화
@@ -124,8 +128,8 @@ export default function ProductFilters({ defaultType, defaultStatus }: ProductFi
 
       {/* 🔹 로딩 인디케이터 (선택사항) */}
       {isPending && (
-        <div className="ml-2 flex items-center gap-1 text-sm text-gray-500">
-          <span className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+        <div className="ml-2 flex items-center gap-1 text-sm text-stone-500">
+          <span className="h-3 w-3 animate-spin rounded-full border-2 border-stone-400 border-t-transparent" />
           <span>필터 적용 중...</span>
         </div>
       )}
