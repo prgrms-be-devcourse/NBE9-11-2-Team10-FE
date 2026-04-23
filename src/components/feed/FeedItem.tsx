@@ -8,6 +8,7 @@ import { fetchCommentList } from "@/lib/services/feed.service";
 import { CommentList } from "./FeedCommentList";
 import { FeedActions } from "./FeedActions";
 import { SellerPublicResponse } from "@/types/auth";
+import { toggleFeedLikeAction } from "@/lib/actions/feed.action";
 
 interface Props {
   feed: Feed;
@@ -22,6 +23,10 @@ export function FeedItem({ feed, sellerId, isMine, seller }: Props) {
   const [isCommentsLoaded, setIsCommentsLoaded] = useState(false);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [localLikeState, setLocalLikeState] = useState({
+    isLiked: feed.isLiked,
+    likeCount: feed.likeCount,
+  });
 
   // ✅ 댓글 로드 함수 (최초 1 페이지만)
   const loadComments = useCallback(async () => {
@@ -54,6 +59,44 @@ export function FeedItem({ feed, sellerId, isMine, seller }: Props) {
       loadComments(); // ✅ 최초 열람 시에만 실제 요청
     } else {
       setShowComments((prev) => !prev);
+    }
+  };
+
+  const handleFeedLikeToggle = async () => {
+    if (!feed.id) {
+      alert("피드 정보를 확인할 수 없습니다.");
+      return;
+    }
+
+    const prevState = localLikeState;
+    const optimisticState = {
+      isLiked: !prevState.isLiked,
+      likeCount: prevState.isLiked
+        ? Math.max(0, prevState.likeCount - 1)
+        : prevState.likeCount + 1,
+    };
+    setLocalLikeState(optimisticState);
+
+    try {
+      const result = await toggleFeedLikeAction({
+        sellerId,
+        feedId: feed.id,
+      });
+
+      if (!result.success || !result.data) {
+        setLocalLikeState(prevState);
+        alert(result.error || "좋아요 처리 중 오류가 발생했습니다.");
+        return;
+      }
+
+      setLocalLikeState({
+        isLiked: result.data.isLiked,
+        likeCount: result.data.likeCount,
+      });
+    } catch (error) {
+      console.error("[FeedItem] Feed like toggle failed:", error);
+      setLocalLikeState(prevState);
+      alert("좋아요 처리 중 오류가 발생했습니다.");
     }
   };
 
@@ -142,8 +185,16 @@ export function FeedItem({ feed, sellerId, isMine, seller }: Props) {
       {/* 👇 액션 버튼 (좋아요/댓글) */}
       <footer className="border-t pt-3">
         <div className="flex items-center gap-4 text-sm text-gray-600">
-          <button className="flex items-center gap-1 hover:text-red-500">
-            ❤️ {feed.likeCount}
+          <button
+            type="button"
+            onClick={handleFeedLikeToggle}
+            className={`flex items-center gap-1 transition-colors ${
+              localLikeState.isLiked
+                ? "text-red-500 hover:text-red-600"
+                : "hover:text-red-500"
+            }`}
+          >
+            ❤️ {localLikeState.likeCount}
           </button>
 
           {/* ✅ 댓글 버튼: 클릭 시 댓글 로딩 트리거 */}

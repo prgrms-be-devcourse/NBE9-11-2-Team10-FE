@@ -79,9 +79,9 @@ export async function handleUpdateProduct(
       price: Number(formData.get("price")),
       stock: Number(formData.get("stock")),
       type: formData.get("type") as "BOOK" | "EBOOK",
+      status: formData.get("status") as "SELLING" | "SOLD_OUT" | "INACTIVE",
       description: (formData.get("description") as string) || undefined,
       imageUrl: (formData.get("imageUrl") as string) || null,
-      // status는 별도 액션으로 관리하므로 여기선 제외
     };
 
     const result = await updateProduct(productId, data);
@@ -133,6 +133,6 @@ export async function deactivateProductAction(
     return { error: result.detail || "unknown_error" };
   }
 
-  // ✅ 성공 시 리다이렉트
-  redirect("/seller/dashboard");
+  // ✅ 성공 시 내 상품 목록으로 리다이렉트
+  redirect("/seller/products");
 }

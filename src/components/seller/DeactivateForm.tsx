@@ -18,7 +18,7 @@ export default function DeactivateForm({ productId }: DeactivateFormProps) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     if (
       !confirm(
-        "정말 이 상품을 비활성화하시겠습니까?\n활성화는 별도 관리 페이지에서만 가능합니다.",
+        "정말 이 상품을 삭제하시겠습니까?\n삭제하면 상품은 비활성화 처리됩니다.",
       )
     ) {
       e.preventDefault();
@@ -37,7 +37,7 @@ export default function DeactivateForm({ productId }: DeactivateFormProps) {
                    hover:border-red-300 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed 
                    transition-all"
       >
-        {isPending ? "처리 중..." : "🗑️ 비활성화"}
+        {isPending ? "처리 중..." : "🗑️ 삭제"}
       </button>
 
       {/* ✅ 에러 메시지 표시 (선택사항) */}

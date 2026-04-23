@@ -34,6 +34,87 @@ import { getForwardedHeaders, handleApiError } from "@/utils/helper";
 
 const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:4000";
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function normalizeFeedListResponse(payload: unknown): FeedListResponse {
+  const raw = asRecord(payload);
+  const rawData = asRecord(raw?.data);
+  const directFeeds = raw?.feeds;
+  const nestedFeeds = rawData?.feeds;
+  const sourceFeeds = Array.isArray(directFeeds)
+    ? directFeeds
+    : Array.isArray(nestedFeeds)
+      ? nestedFeeds
+      : [];
+
+  const feeds = sourceFeeds.map((item: unknown) => {
+    const feed = asRecord(item);
+    const mediaUrls = Array.isArray(feed?.mediaUrls)
+      ? (feed.mediaUrls as unknown[])
+      : [];
+    const firstMedia = mediaUrls[0];
+    const normalizedImageUrl =
+      typeof feed?.imageUrl === "string"
+        ? feed.imageUrl
+        : typeof firstMedia === "string"
+          ? firstMedia
+          : undefined;
+
+    return {
+      id: String(feed?.id ?? feed?.feedId ?? ""),
+      content: typeof feed?.content === "string" ? feed.content : "",
+      imageUrl: normalizedImageUrl,
+      likeCount: Number(feed?.likeCount ?? 0),
+      commentCount: Number(feed?.commentCount ?? 0),
+      isLiked: Boolean(feed?.isLiked),
+      createdAt:
+        typeof feed?.createdAt === "string"
+          ? feed.createdAt
+          : new Date().toISOString(),
+      isNotice: Boolean(feed?.isNotice),
+    };
+  });
+
+  return {
+    data: { feeds },
+    pagination: raw?.pagination as FeedListResponse["pagination"] | undefined,
+  };
+}
+
+function normalizeCommentListResponse(payload: unknown): CommentListResponse {
+  const raw = asRecord(payload);
+  const rawData = asRecord(raw?.data);
+  const directComments = raw?.comments;
+  const nestedComments = rawData?.comments;
+  const comments = (
+    Array.isArray(directComments)
+      ? directComments
+      : Array.isArray(nestedComments)
+        ? nestedComments
+        : []
+  ) as CommentResponse[];
+
+  return {
+    data: { comments },
+    pagination: (raw?.pagination as CommentListResponse["pagination"] | undefined) ?? {
+      currentPage: 0,
+      totalPages: comments.length > 0 ? 1 : 0,
+      totalElements: comments.length,
+    },
+  };
+}
+
+function normalizeLikeToggleResponse<T extends { isLiked: boolean; likeCount: number }>(
+  payload: unknown,
+): T {
+  const raw = payload as T | { data?: T };
+  return (raw as { data?: T }).data ?? (raw as T);
+}
+
 export async function fetchFeedList(
   sellerId: string,
   mockUserId?: string,
@@ -62,9 +143,8 @@ export async function fetchFeedList(
     throw ApiError.fromProblemDetail(error);
   }
 
-  const data = await response.json() as FeedListResponse;
-
-  return data;
+  const data = await response.json();
+  return normalizeFeedListResponse(data);
 }
 // ============================================================================
 // 🔹 GET /api/v1/stores/{sellerId}/feeds/{feedId}/comments - 댓글 목록 조회
@@ -119,9 +199,8 @@ export async function fetchCommentList(
     throw ApiError.fromProblemDetail(error);
   }
 
-  const data = await response.json() as CommentListResponse;
-
-  return data;
+  const data = await response.json();
+  return normalizeCommentListResponse(data);
 }
 
 // ============================================================================
@@ -295,23 +374,49 @@ export async function toggleFeedLike(
       : undefined,
   );
 
-  const response = await fetch(
+  const candidates = [
+    `${API_BASE_URL}/api/v1/stores/me/feeds/${feedId}/like`,
+    `${API_BASE_URL}/api/v1/stores/me/feeds/${feedId}/likes`,
     `${API_BASE_URL}/api/v1/stores/${sellerId}/feeds/${feedId}/like`,
-    {
-      method: "POST",
-      headers,
-      cache: "no-store",
-    },
-  );
+    `${API_BASE_URL}/api/v1/stores/${sellerId}/feeds/${feedId}/likes`,
+    `${API_BASE_URL}/api/v1/stores/${sellerId}/feeds/${feedId}/like/toggle`,
+    `${API_BASE_URL}/api/v1/stores/${sellerId}/feeds/${feedId}/likes/toggle`,
+    `${API_BASE_URL}/api/v1/feeds/${feedId}/like`,
+    `${API_BASE_URL}/api/v1/feeds/${feedId}/likes`,
+    `${API_BASE_URL}/api/v1/feeds/${feedId}/like/toggle`,
+    `${API_BASE_URL}/api/v1/feeds/${feedId}/likes/toggle`,
+  ];
+  const methods: Array<"POST" | "PATCH" | "PUT"> = ["POST", "PATCH", "PUT"];
 
-  if (!response.ok) {
-    const error = await handleApiError(response);
+  let lastErrorResponse: Response | null = null;
+
+  for (const endpoint of candidates) {
+    for (const method of methods) {
+      const response = await fetch(endpoint, {
+        method,
+        headers,
+        cache: "no-store",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return normalizeLikeToggleResponse<FeedLikeToggleResponse>(data);
+      }
+
+      lastErrorResponse = response;
+      if (response.status !== 404 && response.status !== 405) {
+        const error = await handleApiError(response);
+        throw ApiError.fromProblemDetail(error);
+      }
+    }
+  }
+
+  if (lastErrorResponse) {
+    const error = await handleApiError(lastErrorResponse);
     throw ApiError.fromProblemDetail(error);
   }
 
-  const data = await response.json() as FeedLikeToggleResponse;
-
-  return data;
+  throw new Error("피드 좋아요 엔드포인트를 찾을 수 없습니다.");
 }
 
 // ============================================================================
@@ -328,7 +433,7 @@ export async function createComment(
   feedId: string,
   input: CreateCommentInput,
   mockUserId?: string,
-): Promise<Promise<ApiResponse<CommentResponse>>> {
+): Promise<CommentResponse> {
   // 1. 스키마 검증
   const validated = createCommentSchema.safeParse(input);
   if (!validated.success) {
@@ -370,9 +475,11 @@ export async function createComment(
     throw ApiError.fromProblemDetail(error);
   }
 
-  const data = await response.json() as ApiResponse<CommentResponse>;
+  const data = await response.json() as
+    | ApiResponse<CommentResponse>
+    | CommentResponse;
 
-  return data;
+  return "data" in data ? data.data : data;
 }
 
 // ============================================================================
@@ -463,7 +570,6 @@ export async function toggleCommentLike(
     throw ApiError.fromProblemDetail(error);
   }
 
-  const data = await response.json() as CommentLikeToggleResponse;
-
-  return data;
+  const data = await response.json();
+  return normalizeLikeToggleResponse<CommentLikeToggleResponse>(data);
 }

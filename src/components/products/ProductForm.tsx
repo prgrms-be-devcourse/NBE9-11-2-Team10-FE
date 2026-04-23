@@ -262,6 +262,43 @@ export default function ProductForm({ action, mode, initialData = {} }: ProductF
         )}
       </div>
 
+      {/* 판매 상태 (수정 모드 전용) */}
+      {mode === 'edit' && (
+        <div>
+          <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+            판매 상태
+            <span className="text-red-600 ml-1" aria-label="required">*</span>
+          </label>
+          <select
+            id="status"
+            name="status"
+            defaultValue={initialData.status ?? 'SELLING'}
+            required
+            aria-required="true"
+            aria-invalid={!!state.errors?.status}
+            aria-describedby={state.errors?.status ? 'status-error' : undefined}
+            className={`w-full px-4 py-2.5 border rounded-lg transition-colors
+              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+              ${state.errors?.status
+                ? 'border-red-500 bg-red-50'
+                : 'border-gray-300 bg-white hover:border-gray-400'
+              }
+              text-gray-900`}
+          >
+            <option value="SELLING">판매중</option>
+            <option value="SOLD_OUT">품절</option>
+          </select>
+          {state.errors?.status && (
+            <p id="status-error" className="mt-1.5 text-sm text-red-600 flex items-center gap-1.5" role="alert">
+              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {state.errors.status}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* 이미지 파일 */}
       <div>
         <label htmlFor="productImageFile" className="block text-sm font-medium text-gray-700 mb-1">
