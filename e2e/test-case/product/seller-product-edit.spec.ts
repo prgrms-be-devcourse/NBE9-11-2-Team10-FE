@@ -62,7 +62,7 @@ test.describe("✏️ 판매자 전용 상품 수정 페이지", () => {
     await expect(page.locator("#description")).toHaveValue(
       MOCK_PRODUCTS.detailed.description,
     );
-    await expect(page.locator("#imageUrl")).toHaveValue(
+    await expect(page.locator('input[name="imageUrl"]')).toHaveValue(
       MOCK_PRODUCTS.detailed.imageUrl,
     );
 
@@ -146,7 +146,7 @@ test.describe("✏️ 판매자 전용 상품 수정 페이지", () => {
     ).toBeVisible();
   });
 
-  test("이미지 URL 형식 오류", async ({
+  test("상품 이미지 파일을 다시 고르면 미리보기가 바뀐다", async ({
     page,
     productHelpers,
     loginAsSeller,
@@ -154,12 +154,14 @@ test.describe("✏️ 판매자 전용 상품 수정 페이지", () => {
     await loginAsSeller();
     await productHelpers.goToSellerProductEdit(1);
 
-    await page.locator("#imageUrl").fill("not-a-url");
-    await productHelpers.submitProductForm(page);
+    await productHelpers.fillProductForm(page, {
+      imageFile: {
+        name: "updated-product-image.svg",
+      },
+    });
 
-    await expect(
-      page.getByText("올바른 이미지 URL 형식이어야 합니다."),
-    ).toBeVisible();
+    await expect(page.getByText("updated-product-image.svg")).toBeVisible();
+    await expect(page.getByAltText("상품 이미지 미리보기")).toBeVisible();
   });
 
   // ============================================================================
@@ -197,9 +199,8 @@ test.describe("✏️ 판매자 전용 상품 수정 페이지", () => {
     await loginAsSeller();
     await productHelpers.goToSellerProductEdit(MOCK_PRODUCTS.detailed.id);
 
-    // ✅ 기존 설명/이미지 지우기
+    // ✅ 기존 설명만 지워도 수정 가능
     await page.locator("#description").fill("");
-    await page.locator("#imageUrl").fill("");
 
     await productHelpers.submitProductForm(page);
 
@@ -270,10 +271,8 @@ test.describe("✏️ 판매자 전용 상품 수정 페이지", () => {
     await expect(page.locator('label[for="type"]')).toContainText("*");
 
     // ✅ 설명, 이미지 URL 은 선택 (옵션)
-    await expect(page.locator('label[for="description"]')).not.toContainText(
-      "*",
-    );
-    await expect(page.locator('label[for="imageUrl"]')).not.toContainText("*");
+    await expect(page.locator('label[for="description"]')).not.toContainText("*");
+    await expect(page.locator('label[for="productImageFile"]')).not.toContainText("*");
   });
 
   test("상품 유형 셀렉트 - BOOK/EBOOK 전환", async ({
@@ -304,7 +303,6 @@ test.describe("✏️ 판매자 전용 상품 수정 페이지", () => {
 
   test("존재하지 않는 상품 수정 시도 - 404", async ({
     page,
-    productHelpers,
     loginAsSeller,
   }) => {
     await loginAsSeller();
@@ -316,7 +314,6 @@ test.describe("✏️ 판매자 전용 상품 수정 페이지", () => {
 
   test("이미 비활성화된 상품 수정 시도 - 404", async ({
     page,
-    productHelpers,
     loginAsSeller,
   }) => {
     await loginAsSeller();

@@ -1,11 +1,7 @@
 // e2e/tests/product-create.spec.ts
 import { MOCK_USERS } from "../../mock-server/lib/mock-user-data";
 import { test, expect } from "./fixtures/product-fixture";
-import {
-  MOCK_SELLER,
-  MOCK_BUYER,
-  MockProductFormData,
-} from "./fixtures/product-fixture";
+import { MockProductFormData } from "./fixtures/product-fixture";
 
 test.describe("🛍️ 판매자 전용 상품 생성 페이지", () => {
   // 🔹 테스트 전/후 데이터 초기화 (격리성 보장)
@@ -172,7 +168,7 @@ test.describe("🛍️ 판매자 전용 상품 생성 페이지", () => {
     ).toBeVisible();
   });
 
-  test("이미지 URL 이 잘못된 형식일 때 에러", async ({
+  test("상품 이미지 파일을 선택하면 등록 전에 미리보기가 보인다", async ({
     page,
     productHelpers,
     loginAsSeller,
@@ -181,18 +177,11 @@ test.describe("🛍️ 판매자 전용 상품 생성 페이지", () => {
     await productHelpers.goToCreateProductPage();
 
     await productHelpers.fillProductForm(page, {
-      productName: "테스트 상품",
-      price: 10000,
-      stock: 10,
-      type: "BOOK",
-      imageUrl: "not-a-valid-url", // ❌ 잘못된 URL
+      imageFile: {},
     });
 
-    await productHelpers.submitProductForm(page);
-
-    await expect(
-      page.getByText("올바른 이미지 URL 형식이어야 합니다."),
-    ).toBeVisible();
+    await expect(page.getByText("test-product-image.svg")).toBeVisible();
+    await expect(page.getByAltText("상품 이미지 미리보기")).toBeVisible();
   });
 
   // ============================================================================
@@ -213,7 +202,7 @@ test.describe("🛍️ 판매자 전용 상품 생성 페이지", () => {
       stock: 50,
       type: "BOOK",
       description: "E2E 테스트를 위해 생성된 상품입니다.",
-      imageUrl: "https://example.com/images/test-product.jpg",
+      imageFile: {},
     };
 
     await productHelpers.fillProductForm(page, testData);

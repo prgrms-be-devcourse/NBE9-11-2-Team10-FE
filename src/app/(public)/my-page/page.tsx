@@ -340,7 +340,7 @@ export default function MyPage() {
               href={ordersHref}
               className="inline-flex w-full items-center justify-between rounded-md border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
             >
-              <span>주문 내역 조회</span>
+              <span>{isSeller ? "판매자 센터" : "주문 내역 조회"}</span>
               <span aria-hidden="true">→</span>
             </Link>
 

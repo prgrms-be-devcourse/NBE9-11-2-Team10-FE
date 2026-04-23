@@ -199,10 +199,22 @@ export const test = base.extend<{
           await textarea.fill(data.description);
         }
 
-        if (data.imageUrl !== undefined) {
-          const input = page.locator("#imageUrl");
+        if (data.imageFile !== undefined) {
+          const input = page.locator("#productImageFile");
           await input.waitFor({ state: "visible" });
-          await input.fill(data.imageUrl || "");
+          if (data.imageFile) {
+            await input.setInputFiles({
+              name: data.imageFile.name ?? "test-product-image.svg",
+              mimeType: data.imageFile.mimeType ?? "image/svg+xml",
+              buffer:
+                data.imageFile.buffer ??
+                Buffer.from(
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240"><rect width="240" height="240" fill="#2563eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-size="28">TEST</text></svg>`,
+                ),
+            });
+          } else {
+            await input.setInputFiles([]);
+          }
         }
 
         // ✅ 3. 입력 후 약간의 지연 (React 상태 업데이트 대기)
@@ -328,6 +340,11 @@ export interface MockProductFormData {
   type: "BOOK" | "EBOOK";
   description?: string;
   imageUrl?: string | null;
+  imageFile?: {
+    name?: string;
+    mimeType?: string;
+    buffer?: Buffer;
+  } | null;
 }
 
 export { expect };
