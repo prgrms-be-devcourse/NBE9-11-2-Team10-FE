@@ -122,6 +122,13 @@ export interface SellerProfileResponse {
   updatedAt?: string;
 }
 
+export interface SellerPublicResponse {
+  imageUrl: string | null;
+  name: string;
+  nickname: string;
+  bio: string | null;
+}
+
 export interface ApiEnvelope<T> {
   success?: boolean;
   data: T;

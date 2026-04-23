@@ -3,9 +3,9 @@
 // ============================================================================
 
 export interface Feed {
-  feedId: string;
+  id: string;
   content: string;
-  mediaUrls: string[];
+  imageUrl?: string;
   likeCount: number;
   commentCount: number;
   isLiked: boolean;
@@ -14,7 +14,9 @@ export interface Feed {
 }
 
 export interface FeedListResponse {
-  feeds: Feed[];
+  data: {
+    feeds: Feed[];
+  }
   pagination?: {
     currentPage: number;
     totalPages: number;
@@ -25,7 +27,7 @@ export interface FeedListResponse {
 // 🔹 피드 생성/수정 요청 DTO
 export interface CreateFeedRequest {
   content: string;
-  mediaUrls?: string[];
+  imageUrl?: string | null;
   isNotice?: boolean;
 }
 
@@ -35,7 +37,7 @@ export type UpdateFeedRequest = CreateFeedRequest;
 export interface CreateFeedResponse {
   feedId: string;
   content: string;
-  mediaUrls?: string[];
+  imageUrl?: string;
   createdAt: string;
   isNotice?: boolean;
 }
@@ -74,7 +76,9 @@ export interface PaginationInfo {
 }
 
 export interface CommentListResponse {
-  comments: CommentResponse[];
+  data: {
+    comments: CommentResponse[];
+  }
   pagination: PaginationInfo;
 }
 

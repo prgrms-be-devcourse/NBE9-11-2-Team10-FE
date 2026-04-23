@@ -7,14 +7,16 @@ import { Feed, CommentResponse } from "@/types/feed.type";
 import { fetchCommentList } from "@/lib/services/feed.service";
 import { CommentList } from "./FeedCommentList";
 import { FeedActions } from "./FeedActions";
+import { SellerPublicResponse } from "@/types/auth";
 
 interface Props {
   feed: Feed;
   sellerId: string;
   isMine?: boolean;
+  seller: SellerPublicResponse;
 }
 
-export function FeedItem({ feed, sellerId, isMine }: Props) {
+export function FeedItem({ feed, sellerId, isMine, seller }: Props) {
   // ✅ 댓글 관련 상태는 이 컴포넌트에서 관리
   const [comments, setComments] = useState<CommentResponse[]>([]);
   const [isCommentsLoaded, setIsCommentsLoaded] = useState(false);
@@ -29,14 +31,14 @@ export function FeedItem({ feed, sellerId, isMine }: Props) {
     try {
       const response = await fetchCommentList(
         sellerId,
-        feed.feedId,
+        feed.id,
         {
           page: 0,
           size: 10,
           sort: "createdAt,desc",
         },
       );
-      setComments(response.comments);
+      setComments(response.data.comments);
       setIsCommentsLoaded(true);
       setShowComments(true);
     } catch (error) {
@@ -44,7 +46,7 @@ export function FeedItem({ feed, sellerId, isMine }: Props) {
     } finally {
       setIsLoadingComments(false);
     }
-  }, [sellerId, feed.feedId, isCommentsLoaded, isLoadingComments]);
+  }, [sellerId, feed.id, isCommentsLoaded, isLoadingComments]);
 
   // ✅ 댓글 토글 핸들러
   const toggleComments = () => {
@@ -66,11 +68,22 @@ export function FeedItem({ feed, sellerId, isMine }: Props) {
       {/* 👇 피드 헤더 (작성자/시간) */}
       <header className="flex items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-            {/* 프로필 이미지 */}
+          <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden relative">
+            {seller.imageUrl ? (
+              <Image
+                src={seller.imageUrl}
+                alt="profile"
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                👤
+              </div>
+            )}
           </div>
           <div>
-            <p className="font-medium text-gray-800">판매자 닉네임</p>
+            <p className="font-medium text-gray-800">{seller.nickname}</p>
             <time className="text-xs text-gray-500">
               {new Date(feed.createdAt).toLocaleDateString("ko-KR")}
             </time>
@@ -80,11 +93,11 @@ export function FeedItem({ feed, sellerId, isMine }: Props) {
         {/* 👈 소유자일 경우 액션 버튼 표시 */}
         <FeedActions
           sellerId={sellerId}
-          feedId={feed.feedId}
+          feedId={feed.id}
           isMine={isMine ?? false}
           onEdit={() => {
             // 수정 페이지로 이동 (Next.js App Router)
-            window.location.href = `/stores/${sellerId}/feeds/${feed.feedId}/edit`;
+            window.location.href = `/stores/${sellerId}/feeds/${feed.id}/edit`;
           }}
           onDelete={() => {
             // 삭제 후 페이지 새로고침
@@ -100,8 +113,20 @@ export function FeedItem({ feed, sellerId, isMine }: Props) {
         </p>
       </div>
 
-      {/* 👇 미디어 (이미지/동영상) */}
-      {feed.mediaUrls?.length > 0 && (
+      {feed.imageUrl && feed.imageUrl.startsWith("http") && (
+        <div className="relative w-full h-[500px] rounded-lg overflow-hidden">
+          <Image
+            src={feed.imageUrl}
+            alt="feed image"
+            fill
+            className="object-contain"
+          />
+        </div>
+      )}
+
+      {/* 👇 미디어 (이미지/동영상) - 여러개일 경우 (추후) */}
+      
+      {/* {feed.mediaUrls?.length > 0 && (
         <div className="grid grid-cols-3 gap-2 mb-4">
           {feed.mediaUrls.slice(0, 3).map((url, idx) => (
             <div
@@ -112,7 +137,7 @@ export function FeedItem({ feed, sellerId, isMine }: Props) {
             </div>
           ))}
         </div>
-      )}
+      )} */}
 
       {/* 👇 액션 버튼 (좋아요/댓글) */}
       <footer className="border-t pt-3">
@@ -138,7 +163,7 @@ export function FeedItem({ feed, sellerId, isMine }: Props) {
             <CommentList
               comments={comments}
               sellerId={sellerId}
-              feedId={feed.feedId}
+              feedId={feed.id}
               onLoadMore={(newComments) => {
                 setComments((prev) => [...prev, ...newComments]);
               }}

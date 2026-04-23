@@ -1,7 +1,7 @@
 // src/components/stores/CommentList.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CommentResponse } from "@/types/feed.type";
 import { fetchCommentList } from "@/lib/services/feed.service";
 import { CommentItem } from "./FeedCommentItem";
@@ -25,6 +25,10 @@ export function CommentList({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const [localComments, setLocalComments] = useState<CommentResponse[]>(comments);
+
+  useEffect(() => {
+    setLocalComments(comments);
+  }, [comments]);
 
   // ✅ 새 댓글 추가 시 목록에 반영
   const handleCommentAdded = (newComment: CommentResponse) => {
@@ -59,8 +63,8 @@ export function CommentList({
         },
       );
 
-      if (response.comments.length > 0) {
-        onLoadMore?.(response.comments);
+      if (response.data.comments.length > 0) {
+        onLoadMore?.(response.data.comments);
         setPage((prev) => prev + 1);
       } else {
         setHasMore(false);

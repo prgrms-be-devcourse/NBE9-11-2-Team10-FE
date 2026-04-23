@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { FeedsSection } from "@/components/feed/FeedsSection";
 import { FeaturedProductsSection } from "@/components/stores/FeaturedProductsSection";
 import { StoreProfile } from "@/components/stores/StoreProfile";
+import { fetchSellerPulbicInfo } from "@/lib/services/userService";
 
 interface PageProps {
   params: Promise<{ sellerId: string }>;
@@ -21,7 +22,8 @@ function SectionSkeleton() {
 // 메인 페이지 컴포넌트
 export default async function SellerProfilePage({ params }: PageProps) {
   const { sellerId } = await params;
-
+  const seller = await fetchSellerPulbicInfo(sellerId);
+  
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-6xl mx-auto px-4">
@@ -34,7 +36,7 @@ export default async function SellerProfilePage({ params }: PageProps) {
             </Suspense>
 
             <Suspense fallback={<SectionSkeleton />}>
-              <FeedsSection sellerId={sellerId} />
+              <FeedsSection sellerId={sellerId} seller={seller} />
             </Suspense>
           </div>
 

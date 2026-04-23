@@ -25,13 +25,18 @@ export default function HomePage() {
       });
   }, []);
 
+  const handleMoveStore = () => {
+    if (!user?.id) return;
+    router.push(`/stores/${user.id}`);
+  };
+
   return (
     <main className="flex-grow bg-gray-50 min-h-screen pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
       {user?.role === "SELLER" && (
         <button
-          onClick={() => router.push("/mypage")}
+          onClick={handleMoveStore}
           className="
             w-full
             h-20
