@@ -86,19 +86,17 @@ export async function submitOrder(
   // ✅ 1. 폼 값 추출
   const roadAddress = formData.get("roadAddress") as string;
   const detailAddress = formData.get("detailAddress") as string;
-  const productId = formData.get("productId") as string;
-  const quantity = formData.get("quantity") as string;
 
   // ✅ 2. 백엔드 요구사항에 맞게 deliveryAddress 조합
   const fullAddress = [
     roadAddress,
     detailAddress
-  ].filter(Boolean).join("\n");
+  ].filter(Boolean).join(" ");
 
   // ✅ 3. 유효성 검사 (Zod 스키마는 deliveryAddress 만 검증)
   const payload = {
     deliveryAddress: fullAddress,
-    orderProducts: [{ productId: Number(productId), quantity: Number(quantity) }],
+    orderProducts: prevState.formData?.orderProducts,
   };
 
   const validationResult = createOrderSchema.safeParse(payload);
@@ -112,12 +110,20 @@ export async function submitOrder(
   }
 
   try {
-    const result = await createOrder(payload);
+    const result = await createOrder(validationResult.data);
+    if (!result.success) {
+      return {
+        ...initialOrderState,
+        success: false,
+        message: "failed",
+      };
+    }
+    const data = result.data;
     return {
       ...initialOrderState,
       success: true,
       message: "주문이 생성되었습니다.",
-      data: { orderNumber: result.orderNumber },
+      data: { orderNumber: data?.orderNumber },
     };
   } catch (error) {
     if (error instanceof OrderApiError) {
@@ -164,8 +170,10 @@ export async function confirmOrderAction(
   try {
     // ✅ 옵션으로 타임아웃 전달 (기본 15초)
     const result = await confirmOrder(data, undefined, { timeoutMs: 15000 });
-    
-    return { success: true, data: result, error: null };
+    if (!result.success) {
+      throw new Error();
+    }
+    return { success: true, data: result.data, error: null };
     
   } catch (error) {
     // ✅ OrderApiError 는 문제 상세 정보 그대로 전달

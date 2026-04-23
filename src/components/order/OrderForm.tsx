@@ -84,6 +84,7 @@ export default function OrderForm({ orderInfo }: OrderFormProps) {
       });
 
       router.push(`/orders/payment?${params.toString()}`);
+      router.refresh();
     }
   }, [state.success, state.data, formData, router, orderInfo.totalPrice]);
 
@@ -288,10 +289,6 @@ export default function OrderForm({ orderInfo }: OrderFormProps) {
           </button>
         </div>
       </div>
-
-      {/* 🔹 hidden fields (서버 액션용) */}
-      <input type="hidden" name="productId" value={orderInfo.productId} />
-      <input type="hidden" name="quantity" value={orderInfo.quantity} />
     </form >
   );
 }

@@ -33,6 +33,8 @@ export default function PaymentPageClient({
   const [isRequesting, setIsRequesting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const cleanPhone = customerMobilePhone.replace(/[^0-9]/g, '');
+
   // ✅ SDK 로드 완료 핸들러 (타입 안전성 확보)
   const handleSdkLoad = () => {
     // ✅ optional chaining 으로 안전하게 접근
@@ -77,7 +79,7 @@ export default function PaymentPageClient({
         failUrl: `${window.location.origin}/orders/payment/fail`,
         customerEmail,
         customerName,
-        customerMobilePhone,
+        customerMobilePhone: cleanPhone,
         card: {
           useEscrow: false,
           flowMode: "DEFAULT",
