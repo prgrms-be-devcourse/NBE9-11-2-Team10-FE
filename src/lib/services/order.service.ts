@@ -17,6 +17,7 @@ import {
     SellerOrdersData,
     OrderDetailData,
     OrderDetailResponseWrapper,
+    ApiResponse,
   } from "@/types/order";
 import { getForwardedHeaders, handleApiError } from "@/utils/helper";
 import { OrderApiError } from "@/utils/error/orders.error";
@@ -34,7 +35,7 @@ const ORDER_CACHE_TAG = "order-data";
 export async function createOrder(
   data: CreateOrderRequest,
   mockUserId?: string,
-): Promise<CreateOrderResponse> {
+): Promise<ApiResponse<CreateOrderResponse>> {
   // ✅ 요청값 검증
   const validated = createOrderSchema.safeParse(data);
   if (!validated.success) {
@@ -69,7 +70,7 @@ export async function createOrder(
     throw OrderApiError.fromProblemDetail(error);
   }
 
-  return response.json() as Promise<CreateOrderResponse>;
+  return response.json() as Promise<ApiResponse<CreateOrderResponse>>;
 }
 
 // ============================================================================
@@ -79,7 +80,7 @@ export async function confirmOrder(
   data: ConfirmOrderRequest,
   mockUserId?: string,
   options?: { timeoutMs?: number }
-): Promise<ConfirmOrderResponse> {
+): Promise<ApiResponse<ConfirmOrderResponse>> {
   const { timeoutMs = 15000 } = options ?? {};
   const validated = confirmOrderSchema.safeParse(data);
   if (!validated.success) {
@@ -124,7 +125,7 @@ export async function confirmOrder(
     // ✅ 결제 성공 시 관련 캐시 무효화
     revalidateTag(ORDER_CACHE_TAG, "max");
 
-    return response.json() as Promise<ConfirmOrderResponse>;
+    return response.json() as Promise<ApiResponse<ConfirmOrderResponse>>;
     
   } catch (error) {
     clearTimeout(timeoutId); // ✅ 에러 시에도 타이머 클리어
