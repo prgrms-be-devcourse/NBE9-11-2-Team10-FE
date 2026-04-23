@@ -15,6 +15,17 @@ const nextConfig: NextConfig = {
         hostname: "search.pstatic.net",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "example.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "4000",
+        pathname: "/mock-images/**",
+      },
     ],
   },
 };
