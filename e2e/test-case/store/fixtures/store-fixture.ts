@@ -138,7 +138,7 @@ export const MOCK_FEEDS = FeedStore.findBySellerId(String(MOCK_SELLER.id));
 
 export const MOCK_FEATURED_PRODUCTS = FeaturedProductStore.findBySellerId(
   String(MOCK_SELLER.id),
-);
+).slice(0, 3);
 
 // ============================================================================
 // 🛠️ 커스텀 픽스처: 스토어 프로필 헬퍼

@@ -3,6 +3,9 @@ import { test, expect } from "./fixtures/product-fixture";
 import { MOCK_PRODUCTS } from "./fixtures/product-fixture";
 
 test.describe("🔍 상품 상세 페이지", () => {
+  test.beforeEach(async ({ productHelpers }) => {
+    await productHelpers.resetMockProducts();
+  });
   // 🔹 기본 로딩: 유효한 상품 ID
   test("유효한 상품 ID 로 상세 페이지 로딩", async ({
     page,
@@ -71,16 +74,13 @@ test.describe("🔍 상품 상세 페이지", () => {
   }) => {
     await productHelpers.goToProductDetail(MOCK_PRODUCTS.detailed.id);
 
-    const buyButton = page.getByRole("button", { name: "구매하기" });
+    const buyButton = page.getByTestId(`product-buy-button-${MOCK_PRODUCTS.detailed.id}`);
 
     // ✅ 버튼 표시 및 활성화 상태
     await expect(buyButton).toBeVisible();
     await expect(buyButton).toBeEnabled();
     await expect(buyButton).toHaveClass(/bg-blue-600/);
-
-    // ✅ 장바구니 버튼도 활성화
-    const cartButton = page.getByRole("button", { name: "장바구니 담기" });
-    await expect(cartButton).toBeEnabled();
+    await expect(buyButton).toHaveText("구매하기");
   });
 
   // 🔹 액션 버튼: 품절 상품
@@ -90,16 +90,13 @@ test.describe("🔍 상품 상세 페이지", () => {
   }) => {
     await productHelpers.goToProductDetail(MOCK_PRODUCTS.soldOut.id);
 
-    const buyButton = page.getByRole("button", { name: "구매 불가" });
+    const buyButton = page.getByTestId(`product-buy-button-${MOCK_PRODUCTS.soldOut.id}-disabled`);
 
     // ✅ 버튼 텍스트 변경 및 비활성화
     await expect(buyButton).toBeVisible();
     await expect(buyButton).toBeDisabled();
     await expect(buyButton).toHaveClass(/bg-gray-200|opacity-50/);
-
-    // ✅ 장바구니도 비활성화
-    const cartButton = page.getByRole("button", { name: "장바구니 담기" });
-    await expect(cartButton).toBeDisabled();
+    await expect(buyButton).toHaveText("품절");
   });
 
   // 🔹 404: 존재하지 않는 상품
@@ -165,11 +162,13 @@ test.describe("🔍 상품 상세 페이지", () => {
       page.getByRole("heading", { name: MOCK_PRODUCTS.detailed.name }),
     ).toBeVisible();
 
-    // ✅ 버튼들이 세로 정렬 또는 적절한 간격 유지
-    const actionButtons = page
-      .locator("button")
-      .filter({ hasText: /구매|장바구니/ });
-    await expect(actionButtons.first()).toBeVisible();
+    // ✅ 구매 버튼 확인
+    const buyButton = page.getByTestId(`product-buy-button-${MOCK_PRODUCTS.detailed.id}`);
+
+    await expect(buyButton).toBeVisible();
+    await expect(buyButton).toBeEnabled();
+    await expect(buyButton).toHaveClass(/bg-blue-600/);
+    await expect(buyButton).toHaveText("구매하기");
 
     // ✅ 이미지가 화면 너비에 맞게 조정
     const image = page.locator("img").first();

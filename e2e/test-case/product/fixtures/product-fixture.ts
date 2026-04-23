@@ -246,8 +246,8 @@ export const test = base.extend<{
       },
       // ✅ Mock 데이터 초기화 (E2E 테스트 격리용)
       resetMockProducts: async () => {
-        await page.request.delete(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/v1/stores/me/products/__reset`,
+        await page.request.post(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/v1/__reset`,
         );
       },
       goToSellerProductDetail: async (productId: number) => {
